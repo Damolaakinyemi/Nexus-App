@@ -1,0 +1,9 @@
+{
+  "name": "nexus-story-app",
+  "version": "1.0.0",
+  "description": "NEXUS — AI Interactive Story App",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  }
+}
