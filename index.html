@@ -595,8 +595,8 @@ body {
   </div>
   <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;">
     <button class="btn btn-p btn-sm" onclick="goWiz()">+ New Story</button>
+    <button class="btn btn-out btn-sm" onclick="openUserSettings()" title="Preferences">⚙ Settings</button>
     <button class="btn btn-out btn-sm" onclick="doLogout()">Sign Out</button>
-     <button class="btn btn-out btn-sm" onclick="openUserSettings()" title="Preferences">⚙ Settings</button>
   </div>
 </div>
 <div class="dash-body">
@@ -671,6 +671,99 @@ body {
     <div id="settingsAccountInfo" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--sub);line-height:1.8;"></div>
   </div>
 </div>
+
+<!-- ═══════════ USER SETTINGS MODAL ═══════════ -->
+<div class="modal-overlay" id="userSettingsModal">
+  <div class="modal-box" style="max-width:500px;">
+    <button class="modal-close" onclick="closeUserSettings()">✕</button>
+    <div class="modal-h">⚙ Preferences</div>
+    <div class="modal-sub">Customize your NEXUS experience.</div>
+
+    <!-- APPEARANCE -->
+    <div class="sec-title">🎨 Appearance</div>
+    <div class="field" style="margin-bottom:18px;">
+      <label class="lbl">Theme</label>
+      <div style="display:flex;gap:10px;margin-top:8px;">
+        <button id="themeDark" class="btn btn-p btn-sm" onclick="setTheme('dark')" style="flex:1;">🌙 Dark</button>
+        <button id="themeLight" class="btn btn-out btn-sm" onclick="setTheme('light')" style="flex:1;">☀️ Light</button>
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:18px;">
+      <label class="lbl">Font Size</label>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:8px;">
+        <button class="btn btn-out btn-sm" onclick="changeFontSize(-1)">A−</button>
+        <span id="fontSizeLabel" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--txt);min-width:40px;text-align:center;">16px</span>
+        <button class="btn btn-out btn-sm" onclick="changeFontSize(1)">A+</button>
+      </div>
+    </div>
+
+    <div style="height:1px;background:var(--border-s);margin:20px 0;"></div>
+
+    <!-- STORY -->
+    <div class="sec-title">📖 Story</div>
+    <div class="field" style="margin-bottom:18px;">
+      <label class="lbl">Story Speed</label>
+      <div style="display:flex;gap:10px;margin-top:8px;">
+        <button id="speedNormal" class="btn btn-out btn-sm" onclick="setUserSpeed('normal')" style="flex:1;">⚡ Fast</button>
+        <button id="speedTurbo" class="btn btn-out btn-sm" onclick="setUserSpeed('turbo')" style="flex:1;">🐇 Turbo</button>
+        <button id="speedInstant" class="btn btn-out btn-sm" onclick="setUserSpeed('instant')" style="flex:1;">⏩ Instant</button>
+      </div>
+    </div>
+
+    <div style="height:1px;background:var(--border-s);margin:20px 0;"></div>
+
+    <!-- MUSIC -->
+    <div class="sec-title">🎵 Music</div>
+    <div class="field" style="margin-bottom:18px;">
+      <label class="lbl">Volume</label>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:8px;">
+        <span style="font-size:16px;">🔇</span>
+        <input type="range" id="musicVolume" min="0" max="100" value="50" oninput="setMusicVolume(this.value)" style="flex:1;accent-color:var(--p1);">
+        <span style="font-size:16px;">🔊</span>
+        <span id="volumeLabel" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--txt);min-width:35px;">50%</span>
+      </div>
+    </div>
+
+    <div style="height:1px;background:var(--border-s);margin:20px 0;"></div>
+
+    <!-- LANGUAGE -->
+    <div class="sec-title">🌐 Language</div>
+    <div class="field" style="margin-bottom:18px;">
+      <select id="langSelect" class="inp" onchange="setLanguage(this.value)" style="cursor:pointer;">
+        <option value="en">🇺🇸 English</option>
+        <option value="es">🇪🇸 Spanish</option>
+        <option value="fr">🇫🇷 French</option>
+        <option value="de">🇩🇪 German</option>
+        <option value="ja">🇯🇵 Japanese</option>
+        <option value="pt">🇧🇷 Portuguese</option>
+        <option value="zh">🇨🇳 Chinese</option>
+        <option value="ko">🇰🇷 Korean</option>
+      </select>
+    </div>
+
+    <div style="height:1px;background:var(--border-s);margin:20px 0;"></div>
+
+    <!-- NOTIFICATIONS -->
+    <div class="sec-title">🔔 Notifications</div>
+    <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-family:'Fraunces',serif;font-size:14px;color:var(--sub);">Story reminders</span>
+        <div id="notifStoryTrack" onclick="toggleNotif('notifStory')" style="width:44px;height:24px;border-radius:24px;background:var(--border-s);cursor:pointer;transition:.3s;position:relative;">
+          <div id="notifStoryThumb" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--muted);transition:.3s;"></div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-family:'Fraunces',serif;font-size:14px;color:var(--sub);">Streak alerts</span>
+        <div id="notifStreakTrack" onclick="toggleNotif('notifStreak')" style="width:44px;height:24px;border-radius:24px;background:var(--border-s);cursor:pointer;transition:.3s;position:relative;">
+          <div id="notifStreakThumb" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--muted);transition:.3s;"></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-p" style="width:100%;padding:13px;" onclick="closeUserSettings()">✓ Save & Close</button>
+  </div>
+</div>
+
 <!-- ═══════════ CONTINUATION MODAL ═══════════ -->
 <div class="modal-overlay" id="arcModal">
   <div class="modal-box">
@@ -2655,6 +2748,130 @@ function launchArc(){
       if(document.getElementById('fIn').style.display!=='none')doLogin();else doSignup();
     }
   });
+})();
+</script>
+
+<script>
+/* ═══════════ USER PREFERENCES ═══════════ */
+var USER_PREFS = JSON.parse(localStorage.getItem('nexus_user_prefs')||'{}');
+var USER_FONT_SIZE = USER_PREFS.fontSize || 16;
+var USER_NOTIFS = USER_PREFS.notifs || {notifStory:false, notifStreak:false};
+var USER_LANG = USER_PREFS.lang || 'en';
+
+function openUserSettings(){
+  var m=document.getElementById('userSettingsModal');
+  if(m) m.classList.add('on');
+  loadUserPrefsUI();
+}
+function closeUserSettings(){
+  var m=document.getElementById('userSettingsModal');
+  if(m) m.classList.remove('on');
+  saveUserPrefs();
+}
+
+function loadUserPrefsUI(){
+  /* theme */
+  var theme = USER_PREFS.theme||'dark';
+  document.getElementById('themeDark').className = theme==='dark' ? 'btn btn-p btn-sm' : 'btn btn-out btn-sm';
+  document.getElementById('themeLight').className = theme==='light' ? 'btn btn-p btn-sm' : 'btn btn-out btn-sm';
+  /* font size */
+  document.getElementById('fontSizeLabel').textContent = USER_FONT_SIZE+'px';
+  /* speed */
+  var spd = USER_PREFS.speed||'normal';
+  ['Normal','Turbo','Instant'].forEach(function(s){
+    var el=document.getElementById('speed'+s);
+    if(el) el.className = (spd===s.toLowerCase()) ? 'btn btn-p btn-sm' : 'btn btn-out btn-sm';
+  });
+  /* volume */
+  var vol = USER_PREFS.volume !== undefined ? USER_PREFS.volume : 50;
+  document.getElementById('musicVolume').value = vol;
+  document.getElementById('volumeLabel').textContent = vol+'%';
+  /* language */
+  document.getElementById('langSelect').value = USER_LANG;
+  /* notifications */
+  ['notifStory','notifStreak'].forEach(function(id){
+    var on = USER_NOTIFS[id]||false;
+    var track=document.getElementById(id+'Track');
+    var thumb=document.getElementById(id+'Thumb');
+    if(track) track.style.background = on ? 'var(--p1)' : 'var(--border-s)';
+    if(thumb) thumb.style.left = on ? '23px' : '3px';
+  });
+}
+
+function setTheme(t){
+  USER_PREFS.theme = t;
+  document.getElementById('themeDark').className = t==='dark' ? 'btn btn-p btn-sm' : 'btn btn-out btn-sm';
+  document.getElementById('themeLight').className = t==='light' ? 'btn btn-p btn-sm' : 'btn btn-out btn-sm';
+  if(t==='light'){
+    document.documentElement.style.setProperty('--bg','#f5f5f0');
+    document.documentElement.style.setProperty('--txt','#111');
+    document.documentElement.style.setProperty('--card-s','#fff');
+    document.documentElement.style.setProperty('--sub','#555');
+    document.documentElement.style.setProperty('--muted','#888');
+  } else {
+    document.documentElement.style.removeProperty('--bg');
+    document.documentElement.style.removeProperty('--txt');
+    document.documentElement.style.removeProperty('--card-s');
+    document.documentElement.style.removeProperty('--sub');
+    document.documentElement.style.removeProperty('--muted');
+  }
+  saveUserPrefs();
+}
+
+function changeFontSize(delta){
+  USER_FONT_SIZE = Math.min(22, Math.max(12, USER_FONT_SIZE + delta));
+  document.getElementById('fontSizeLabel').textContent = USER_FONT_SIZE+'px';
+  document.body.style.fontSize = USER_FONT_SIZE+'px';
+  USER_PREFS.fontSize = USER_FONT_SIZE;
+  saveUserPrefs();
+}
+
+function setUserSpeed(spd){
+  USER_PREFS.speed = spd;
+  if(spd==='normal') TW_SPEED=14;
+  else if(spd==='turbo') TW_SPEED=4;
+  else TW_SPEED=0;
+  ['Normal','Turbo','Instant'].forEach(function(s){
+    var el=document.getElementById('speed'+s);
+    if(el) el.className = (spd===s.toLowerCase()) ? 'btn btn-p btn-sm' : 'btn btn-out btn-sm';
+  });
+  saveUserPrefs();
+}
+
+function setMusicVolume(val){
+  USER_PREFS.volume = parseInt(val);
+  document.getElementById('volumeLabel').textContent = val+'%';
+  var audio = document.getElementById('bgMusic');
+  if(audio) audio.volume = val/100;
+  saveUserPrefs();
+}
+
+function setLanguage(lang){
+  USER_LANG = lang;
+  USER_PREFS.lang = lang;
+  saveUserPrefs();
+}
+
+function toggleNotif(id){
+  USER_NOTIFS[id] = !USER_NOTIFS[id];
+  var on = USER_NOTIFS[id];
+  var track=document.getElementById(id+'Track');
+  var thumb=document.getElementById(id+'Thumb');
+  if(track) track.style.background = on ? 'var(--p1)' : 'var(--border-s)';
+  if(thumb) thumb.style.left = on ? '23px' : '3px';
+  USER_PREFS.notifs = USER_NOTIFS;
+  saveUserPrefs();
+}
+
+function saveUserPrefs(){
+  localStorage.setItem('nexus_user_prefs', JSON.stringify(USER_PREFS));
+}
+
+/* Apply saved prefs on load */
+(function(){
+  if(USER_PREFS.fontSize) { USER_FONT_SIZE=USER_PREFS.fontSize; document.body.style.fontSize=USER_FONT_SIZE+'px'; }
+  if(USER_PREFS.speed) setUserSpeed(USER_PREFS.speed);
+  if(USER_PREFS.theme && USER_PREFS.theme==='light') setTheme('light');
 })();
 </script>
 </body>
