@@ -1,7 +1,3 @@
 {
-  "version": 2,
-  "outputDirectory": "public",
-  "rewrites": [
-    { "source": "/api/claude", "destination": "/api/claude" }
-  ]
+  "version": 2
 }
