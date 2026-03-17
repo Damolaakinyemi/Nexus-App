@@ -2871,7 +2871,7 @@ function toggleNotif(id){
 function saveUserPrefs(){
   localStorage.setItem('nexus_user_prefs', JSON.stringify(USER_PREFS));
 }
-/* ═══════════ BACKGROUND MUSIC ═══════════ */
+/* ═══════════ BACKGROUND MUSIC ═══════════ */ window.stopMusic = function() {   var audio = document.getElementById('bgMusic');   if (audio) { audio.pause(); audio.currentTime = 0; window._currentTrack = null; } }; window.playMusicForGenre = function(genre) {   var audio = document.getElementById('bgMusic');   if (!audio) return;   var map = {thriller:'/thriller.mp3',fantasy:'/fantasy.mp3',horror:'/horror.mp3',isekai:'/isekai.mp3',mystery:'/mystery.mp3',romance:'/romance.mp3',scifi:'/scifi.mp3',adventure:'/adventure.mp3',noir:'/thriller.mp3',survival:'/adventure.mp3',supernatural:'/horror.mp3',historical:'/adventure.mp3',random:'/fantasy.mp3'};   var track = map[genre] || '/fantasy.mp3';   if (window._currentTrack === track) return;   window._currentTrack = track;   audio.src = track;   audio.volume = 0.5;   audio.play().catch(function(){}); };
 var MUSIC_MAP = {
   thriller: '/thriller.mp3',
   fantasy: '/fantasy.mp3',
