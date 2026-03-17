@@ -588,7 +588,7 @@ body {
 <!-- ═══════════ DASHBOARD ═══════════ -->
 <div id="dash-page" class="page">
    <audio id="bgMusic" loop style="display:none"></audio>
-<div class="topbar">
+<audio id="bgMusic" loop style="display:none"></audio> <div class="topbar">
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
     <span class="topbar-logo">NEXUS</span>
     <div class="user-chip" id="uChip">👤 Guest</div>
@@ -847,7 +847,7 @@ body {
 
 <!-- ═══════════ WIZARD ═══════════ -->
 <div id="wiz-page" class="page">
-<div class="topbar">
+<audio id="bgMusic" loop style="display:none"></audio> <div class="topbar">
   <span class="topbar-logo">NEXUS</span>
   <button class="btn btn-out btn-sm" onclick="showPage('dash-page');rdash()">← Dashboard</button>
 </div>
@@ -2050,7 +2050,7 @@ function beginStory(){
   setupGNav();
   document.getElementById('storyLog').innerHTML='';document.getElementById('cwrap').innerHTML='';document.getElementById('errbox').innerHTML='';
   showPage('game-page');
-  fetchBeat(null,false,0);
+  fetchBeat(null,false,0); playMusicForGenre(G.genre);
    playMusicForGenre(G.genre);
 }
 var TW_SPEED=14; /* typewriter ms per char — lower = faster */
@@ -2089,7 +2089,7 @@ function setupGNav(){
   var sb=document.getElementById('btnSave');if(sb)sb.style.display=(CU&&!CU.guest)?'inline-flex':'none';
 }
    stopMusic();
-function leavegame(){if(CU&&!CU.guest&&G.chapter>1)saveGame(false);showPage('dash-page');rdash();}
+function leavegame(){ stopMusic();if(CU&&!CU.guest&&G.chapter>1)saveGame(false);showPage('dash-page');rdash();}
 
 /* ══════════════════════════════════
    AI GENERATION — ROBUST PIPELINE
@@ -2737,8 +2737,9 @@ function launchArc(){
   document.getElementById('cwrap').innerHTML='';
   document.getElementById('errbox').innerHTML='';
   showPage('game-page');
-  fetchBeat(null,false,0);
+  fetchBeat(null,false,0); 
    playMusicForGenre(G.genre);
+  
 }
 
 /* ── INIT ── */
