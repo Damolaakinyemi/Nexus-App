@@ -587,6 +587,7 @@ body {
 
 <!-- ═══════════ DASHBOARD ═══════════ -->
 <div id="dash-page" class="page">
+   <audio id="bgMusic" loop style="display:none"></audio>
 <div class="topbar">
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
     <span class="topbar-logo">NEXUS</span>
@@ -2050,6 +2051,7 @@ function beginStory(){
   document.getElementById('storyLog').innerHTML='';document.getElementById('cwrap').innerHTML='';document.getElementById('errbox').innerHTML='';
   showPage('game-page');
   fetchBeat(null,false,0);
+   playMusicForGenre(G.genre);
 }
 var TW_SPEED=14; /* typewriter ms per char — lower = faster */
 function toggleSpeed(){
@@ -2086,6 +2088,7 @@ function setupGNav(){
   updateProgress();
   var sb=document.getElementById('btnSave');if(sb)sb.style.display=(CU&&!CU.guest)?'inline-flex':'none';
 }
+   stopMusic();
 function leavegame(){if(CU&&!CU.guest&&G.chapter>1)saveGame(false);showPage('dash-page');rdash();}
 
 /* ══════════════════════════════════
@@ -2735,6 +2738,7 @@ function launchArc(){
   document.getElementById('errbox').innerHTML='';
   showPage('game-page');
   fetchBeat(null,false,0);
+   playMusicForGenre(G.genre);
 }
 
 /* ── INIT ── */
@@ -2866,7 +2870,42 @@ function toggleNotif(id){
 function saveUserPrefs(){
   localStorage.setItem('nexus_user_prefs', JSON.stringify(USER_PREFS));
 }
+/* ═══════════ BACKGROUND MUSIC ═══════════ */
+var MUSIC_MAP = {
+  thriller: '/thriller.mp3',
+  fantasy: '/fantasy.mp3',
+  horror: '/horror.mp3',
+  isekai: '/isekai.mp3',
+  mystery: '/mystery.mp3',
+  romance: '/romance.mp3',
+  scifi: '/scifi.mp3',
+  adventure: '/adventure.mp3',
+  noir: '/thriller.mp3',
+  survival: '/adventure.mp3',
+  supernatural: '/horror.mp3',
+  historical: '/adventure.mp3',
+  random: '/fantasy.mp3'
+};
+var _currentTrack = null;
 
+function playMusicForGenre(genre) {
+  var audio = document.getElementById('bgMusic');
+  if (!audio) return;
+  var track = MUSIC_MAP[genre] || MUSIC_MAP.fantasy;
+  if (_currentTrack === track) return;
+  _currentTrack = track;
+  audio.src = track;
+  var vol = (USER_PREFS.volume !== undefined ? USER_PREFS.volume : 50) / 100;
+  audio.volume = vol;
+  audio.play().catch(function() {});
+}
+
+function stopMusic() {
+  var audio = document.getElementById('bgMusic');
+  if (audio) { audio.pause(); audio.currentTime = 0; _currentTrack = null; }
+}
+
+/* Apply saved prefs on load */
 /* Apply saved prefs on load */
 (function(){
   if(USER_PREFS.fontSize) { USER_FONT_SIZE=USER_PREFS.fontSize; document.body.style.fontSize=USER_FONT_SIZE+'px'; }
