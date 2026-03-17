@@ -2887,7 +2887,7 @@ var MUSIC_MAP = {
   historical: '/adventure.mp3',
   random: '/fantasy.mp3'
 };
-var _currentTrack = null;
+var _currentTrack = null;  function stopMusic() {   var audio = document.getElementById('bgMusic');   if (audio) { audio.pause(); audio.currentTime = 0; _currentTrack = null; } }  function playMusicForGenre(genre) {   var audio = document.getElementById('bgMusic');   if (!audio) return;   var track = MUSIC_MAP[genre] || MUSIC_MAP.fantasy;   if (_currentTrack === track) return;   _currentTrack = track;   audio.src = track;   var vol = (USER_PREFS && USER_PREFS.volume !== undefined ? USER_PREFS.volume : 50) / 100;   audio.volume = vol;   audio.play().catch(function() {}); }
 
 function playMusicForGenre(genre) {
   var audio = document.getElementById('bgMusic');
