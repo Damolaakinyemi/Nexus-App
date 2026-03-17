@@ -2089,7 +2089,7 @@ function setupGNav(){
   var sb=document.getElementById('btnSave');if(sb)sb.style.display=(CU&&!CU.guest)?'inline-flex':'none';
 }
    stopMusic();
-function leavegame(){ stopMusic();if(CU&&!CU.guest&&G.chapter>1)saveGame(false);showPage('dash-page');rdash();}
+function leavegame(){if(typeof stopMusic==='function')stopMusic(); stopMusic();if(CU&&!CU.guest&&G.chapter>1)saveGame(false);showPage('dash-page');rdash();}
 
 /* ══════════════════════════════════
    AI GENERATION — ROBUST PIPELINE
