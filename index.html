@@ -836,6 +836,21 @@ body{background:var(--bg);color:var(--txt);font-family:'Fraunces',serif;font-siz
     <div class="es"><span class="es-n" id="eGenre">—</span><span class="es-l">Genre</span></div>
   </div>
 
+  <!-- FEATURE 6: AUTHOR STYLE RATING (end of story only) -->
+  <div id="endStyleRating" style="display:none;margin-bottom:24px;">
+    <div class="style-rating" style="max-width:560px;margin:0 auto;">
+      <div class="style-rating-label" id="endRatingLabel">How well did this feel like the author's style?</div>
+      <div class="star-row" id="endStarRow">
+        <button class="star-btn" data-n="1" onclick="rateStory(1)">★</button>
+        <button class="star-btn" data-n="2" onclick="rateStory(2)">★</button>
+        <button class="star-btn" data-n="3" onclick="rateStory(3)">★</button>
+        <button class="star-btn" data-n="4" onclick="rateStory(4)">★</button>
+        <button class="star-btn" data-n="5" onclick="rateStory(5)">★</button>
+      </div>
+      <div class="rating-avg" id="endRatingFeedback">Rate the story</div>
+    </div>
+  </div>
+
   <!-- STORY DNA CARD -->
   <div class="dna-card" id="dnaCarda" style="display:none">
     <div class="dna-title">🧬 Your Story DNA</div>
@@ -1068,47 +1083,82 @@ function renderCollabBanner(){
 ════════════════════════════════════════ */
 var VOICE={enabled:false,speaking:false,utterance:null,autoRead:false,rate:1.0};
 
-/* Genre-specific voice params */
+/* Genre-specific voice params — tuned for naturalness not robotics */
 var VOICE_PARAMS={
-  thriller:{rate:0.88,pitch:0.8,voice:'male'},
-  horror:{rate:0.75,pitch:0.7,voice:'male'},
-  romance:{rate:1.0,pitch:1.1,voice:'female'},
-  fantasy:{rate:0.95,pitch:1.0,voice:'female'},
-  isekai:{rate:1.0,pitch:1.05,voice:'female'},
-  mystery:{rate:0.9,pitch:0.9,voice:'male'},
-  scifi:{rate:0.92,pitch:0.85,voice:'male'},
-  noir:{rate:0.8,pitch:0.75,voice:'male'},
-  survival:{rate:1.05,pitch:0.95,voice:'male'},
-  supernatural:{rate:0.85,pitch:0.95,voice:'female'},
-  historical:{rate:0.9,pitch:1.0,voice:'female'}
+  thriller:{rate:0.92,pitch:0.9,voice:'male'},
+  horror:{rate:0.82,pitch:0.85,voice:'male'},
+  romance:{rate:0.95,pitch:1.0,voice:'female'},
+  fantasy:{rate:0.93,pitch:1.0,voice:'female'},
+  isekai:{rate:0.96,pitch:1.0,voice:'female'},
+  mystery:{rate:0.9,pitch:0.92,voice:'male'},
+  scifi:{rate:0.93,pitch:0.9,voice:'male'},
+  noir:{rate:0.87,pitch:0.88,voice:'male'},
+  survival:{rate:0.97,pitch:0.95,voice:'male'},
+  supernatural:{rate:0.89,pitch:0.97,voice:'female'},
+  historical:{rate:0.91,pitch:0.98,voice:'female'}
+};
+
+/* Ranked voice names — most natural-sounding voices first.
+   These are the high-quality neural voices available on macOS/iOS/Windows. */
+var VOICE_PRIORITY={
+  female:['Samantha','Karen','Tessa','Moira','Fiona','Victoria','Allison','Ava','Susan','Zira','Hazel','Catherine'],
+  male:['Daniel','Alex','Fred','Oliver','Arthur','Tom','David','Mark','James','George','Richard','Lee']
 };
 
 function getVoiceForGenre(genre){
-  var params=VOICE_PARAMS[genre]||{rate:1.0,pitch:1.0,voice:'female'};
+  var params=VOICE_PARAMS[genre]||{rate:0.93,pitch:0.97,voice:'female'};
   var voices=window.speechSynthesis?window.speechSynthesis.getVoices():[];
+  var engVoices=voices.filter(function(v){return v.lang.startsWith('en');});
   var preferred=null;
-  if(params.voice==='female'){
-    preferred=voices.find(function(v){return /female|woman|girl|zira|victoria|karen|samantha|tessa|moira/i.test(v.name)&&v.lang.startsWith('en');});
-  } else {
-    preferred=voices.find(function(v){return /male|man|daniel|david|george|alex|fred/i.test(v.name)&&v.lang.startsWith('en');});
+  var priority=VOICE_PRIORITY[params.voice]||VOICE_PRIORITY.female;
+  /* Try to find a high-quality named voice first */
+  for(var i=0;i<priority.length;i++){
+    var name=priority[i];
+    preferred=engVoices.find(function(v){return v.name.indexOf(name)>-1;});
+    if(preferred)break;
   }
-  if(!preferred)preferred=voices.find(function(v){return v.lang.startsWith('en');});
+  /* Fallback: any English voice */
+  if(!preferred)preferred=engVoices[0]||null;
   return {voice:preferred,rate:params.rate,pitch:params.pitch};
+}
+
+/* Add natural breathing room to text before speaking */
+function humanizeText(text){
+  if(!text)return text;
+  /* Add slight pause after sentence-ending punctuation */
+  return text
+    .replace(/\.\s+/g,'. ')        /* normalize spacing */
+    .replace(/([.!?])\s+/g,'$1 ')  /* single space after sentence end */
+    .replace(/,\s*/g,', ')         /* normalize comma spacing */
+    .replace(/—/g,' — ')           /* em dash breathing room */
+    .replace(/\s{2,}/g,' ')        /* collapse double spaces */
+    .trim();
 }
 
 function speakText(text){
   if(!window.speechSynthesis||!text)return;
   window.speechSynthesis.cancel();
-  var utt=new SpeechSynthesisUtterance(text);
-  var vp=getVoiceForGenre(G.genre);
-  if(vp.voice)utt.voice=vp.voice;
-  utt.rate=VOICE.rate||vp.rate;
-  utt.pitch=vp.pitch;
-  utt.onstart=function(){VOICE.speaking=true;updateVoiceBtn();};
-  utt.onend=function(){VOICE.speaking=false;updateVoiceBtn();};
-  utt.onerror=function(){VOICE.speaking=false;updateVoiceBtn();};
-  VOICE.utterance=utt;
-  window.speechSynthesis.speak(utt);
+  var processed=humanizeText(text);
+  /* Split into sentences and speak them with micro-pauses for naturalness */
+  var sentences=processed.match(/[^.!?]+[.!?]+["']?\s*/g)||[processed];
+  var idx=0;
+  function speakNext(){
+    if(idx>=sentences.length){VOICE.speaking=false;updateVoiceBtn();return;}
+    var utt=new SpeechSynthesisUtterance(sentences[idx].trim());
+    var vp=getVoiceForGenre(G.genre);
+    if(vp.voice)utt.voice=vp.voice;
+    /* Slightly vary rate per sentence for naturalness — feels less robotic */
+    var rateJitter=(Math.random()*0.04)-0.02; /* ±2% variation */
+    utt.rate=Math.max(0.7,Math.min(1.1,(vp.rate+rateJitter)));
+    utt.pitch=vp.pitch;
+    utt.volume=1.0;
+    if(idx===0){utt.onstart=function(){VOICE.speaking=true;updateVoiceBtn();};}
+    utt.onend=function(){idx++;speakNext();};
+    utt.onerror=function(){VOICE.speaking=false;updateVoiceBtn();};
+    VOICE.utterance=utt;
+    window.speechSynthesis.speak(utt);
+  }
+  speakNext();
 }
 
 function stopSpeaking(){
@@ -1235,64 +1285,43 @@ function renderGhostToggle(chapter){
 var _styleRatings={}; /* key=chapterNum, val=1-5 */
 var _ratingTotals={sum:0,count:0};
 
-function renderStyleRating(chapter){
+/* Rating only shown at end of full story */
+var _storyRating=0;
+
+function showEndStyleRating(){
   var author=(G.settings&&G.settings.customAuthor)||(AUTHOR_DB[G.genre]&&AUTHOR_DB[G.genre].name)||'this author';
-  /* Find the beat's paragraph and inject rating after ghost paths */
-  var seps=document.querySelectorAll('.bsep');
-  var targetPara=null;
-  if(seps.length>=chapter){
-    var sep=seps[chapter-1];
-    if(sep){
-      var next=sep.nextElementSibling;
-      while(next&&!next.classList.contains('spara')){next=next.nextElementSibling;}
-      if(next)targetPara=next;
-    }
-  }
-  var paras=document.querySelectorAll('.spara');
-  if(!targetPara&&paras.length)targetPara=paras[paras.length-1];
-  if(!targetPara)return;
-
-  var existingId='rating-'+chapter;
-  var existing=document.getElementById(existingId);
-  if(existing)existing.remove();
-
-  var ratingEl=document.createElement('div');
-  ratingEl.className='style-rating';
-  ratingEl.id=existingId;
-  var currentRating=_styleRatings[chapter]||0;
-  ratingEl.innerHTML=
-    '<div class="style-rating-label">How much did this feel like '+escHtml(author)+'?</div>'+
-    '<div class="star-row" id="stars-'+chapter+'">'+
-    [1,2,3,4,5].map(function(n){
-      return '<button class="star-btn'+(n<=currentRating?' lit':'')+'" data-n="'+n+'" onclick="rateChapter('+chapter+','+n+')">★</button>';
-    }).join('')+
-    '</div>'+
-    '<div class="rating-avg" id="avgRating-'+chapter+'">'+
-    (_ratingTotals.count>0?'Avg: '+(_ratingTotals.sum/_ratingTotals.count).toFixed(1):'Rate it')+'</div>';
-
-  /* insert after ghost paths or after para */
-  var ghostBlock=document.getElementById('ghost-'+chapter);
-  var insertAfter=ghostBlock||targetPara;
-  insertAfter.parentNode.insertBefore(ratingEl,insertAfter.nextSibling);
+  var label=document.getElementById('endRatingLabel');
+  if(label)label.textContent='How well did this feel like '+author+'?';
+  var wrap=document.getElementById('endStyleRating');
+  if(wrap)wrap.style.display='block';
+  _storyRating=0;
+  document.querySelectorAll('#endStarRow .star-btn').forEach(function(s){s.classList.remove('lit');});
+  var fb=document.getElementById('endRatingFeedback');
+  if(fb)fb.textContent='Rate the whole story';
 }
 
-function rateChapter(chapter,rating){
-  var old=_styleRatings[chapter]||0;
-  _styleRatings[chapter]=rating;
-  if(old>0){_ratingTotals.sum=_ratingTotals.sum-old+rating;}
-  else{_ratingTotals.sum+=rating;_ratingTotals.count++;}
-  /* Update stars UI */
-  var stars=document.querySelectorAll('#stars-'+chapter+' .star-btn');
-  stars.forEach(function(s){s.classList.toggle('lit',parseInt(s.dataset.n)<=rating);});
-  /* Update avg display */
-  var avgEl=document.getElementById('avgRating-'+chapter);
-  if(avgEl&&_ratingTotals.count>0)avgEl.textContent='Avg: '+(_ratingTotals.sum/_ratingTotals.count).toFixed(1);
-  showHealToast('★'.repeat(rating)+' rated!');
+function rateStory(rating){
+  _storyRating=rating;
+  var FEEDBACK={
+    1:'Not quite the right voice — felt different from their style',
+    2:'Glimpses of the style but it drifted a lot',
+    3:'Captured the feel in places — a decent match',
+    4:'Felt close — the voice came through clearly',
+    5:'Nailed it — could have come straight from their books'
+  };
+  document.querySelectorAll('#endStarRow .star-btn').forEach(function(s){
+    s.classList.toggle('lit',parseInt(s.dataset.n)<=rating);
+  });
+  var fb=document.getElementById('endRatingFeedback');
+  if(fb)fb.textContent=FEEDBACK[rating]||'Thanks!';
+  showHealToast('★'.repeat(rating)+' — thanks for the rating!');
+  /* Expose for DNA card */
+  _ratingTotals={sum:rating,count:1};
 }
 
 function getAvgStyleRating(){
-  if(_ratingTotals.count===0)return null;
-  return (_ratingTotals.sum/_ratingTotals.count).toFixed(1);
+  if(!_storyRating)return null;
+  return _storyRating.toFixed(1);
 }
 
 /* ════════════════════════════════════════
@@ -1739,7 +1768,7 @@ function resumeStory(i){
   G={genre:s.genre,seed:s.seed,title:s.title||'',chapter:s.chapter||1,choicesMade:s.choicesMade||0,choiceLog:s.choiceLog||[],messages:s.messages||[],settings:s.settings||{},startedAt:s.startedAt||Date.now()};
   if(s.settings&&s.settings.charList)loadCharsFromSave(s.settings.charList);else loadCharsFromSave(null);
   setupGNav();
-  _styleRatings={};_ratingTotals={sum:0,count:0};_ghostPaths={};
+  _storyRating=0;_ratingTotals={sum:0,count:0};_ghostPaths={};
   clearTimeline();
   /* Rebuild timeline from choiceLog */
   (G.choiceLog||[]).forEach(function(c,i){addToTimeline(i+1,c.text,c.letter||'?');});
@@ -1865,12 +1894,13 @@ function beginStory(){
   applyTheme(W.theme);
   var chCount=W.customCh||25;
   G={genre:ag,seed:seed,title:'',chapter:1,choicesMade:0,choiceLog:[],messages:[],settings:{tone:W.tone,pace:W.pace,danger:W.danger,rom:W.rom,len:W.len,customCh:chCount,theme:W.theme,chars:{h:W.chars.h,l:W.chars.l,v:W.chars.v,m:W.chars.m},charList:getCharsForSave(),customAuthor:(_customAuthor&&_customAuthor.name)||null},startedAt:Date.now()};
-  _styleRatings={};_ratingTotals={sum:0,count:0};_ghostPaths={};
+  _storyRating=0;_ratingTotals={sum:0,count:0};_ghostPaths={};
   clearTimeline();
   setupGNav();
   document.getElementById('storyLog').innerHTML='';
   document.getElementById('cwrap').innerHTML='';
   document.getElementById('errbox').innerHTML='';
+  var esr=document.getElementById('endStyleRating');if(esr)esr.style.display='none';
   renderCollabBanner();
   showPage('game-page');
   fetchBeat(null,false,0);
@@ -2052,13 +2082,11 @@ function renderBeat(data,chosenText){
   if(G.chapter>1&&G.chapter%5===0&&CU&&!CU.guest){saveGame(false);showToast('✓ Auto-saved Ch.'+G.chapter);}
   setTimeout(function(){para.scrollIntoView({behavior:'smooth',block:'start'});},60);
   typewrite(para,data.paragraph,function(){
-    /* After text renders: fetch ghost paths, render rating, handle ending */
+    /* After text renders: fetch ghost paths, handle ending */
     if(chosenText){
       /* Feature 5: Ghost paths — fetch in background */
       fetchGhostPaths(chosenText,chapterNum);
     }
-    /* Feature 6: Style rating */
-    setTimeout(function(){renderStyleRating(chapterNum);},300);
     /* Feature 4: Auto-voice if enabled */
     if(VOICE.autoRead&&data.paragraph){setTimeout(function(){speakText(data.paragraph);},200);}
     if(data.isEnding){if(CU&&!CU.guest)saveGame(true);doEnding(data);}
@@ -2114,6 +2142,8 @@ function doEnding(data){
     if(cb){cb.style.display=(CU&&!CU.guest)?'flex':'none';}
     /* Feature 7: Render Story DNA Card */
     renderDNACard();
+    /* Feature 6: Show style rating widget now that story is done */
+    showEndStyleRating();
     showPage('end-page');
   },1300);
 }
@@ -2177,13 +2207,14 @@ function launchArc(){
   var settings={tone:carryTone?(source.settings&&source.settings.tone||'balanced'):'balanced',pace:source.settings&&source.settings.pace||'medium',danger:source.settings&&source.settings.danger||'medium',rom:source.settings&&source.settings.rom||'subtle',len:'medium',customCh:(function(){var sl=document.getElementById('arcChSlider');return sl?parseInt(sl.value)||25:25;}()),theme:source.settings&&source.settings.theme||'arcane',chars:chars,charList:charList,arcContext:arcCtx,arcType:_arcType,sourceTitle:source.title||cap(source.genre)+' Story',sourceGenre:source.genre};
   applyTheme(settings.theme);
   G={genre:newGenre,seed:seed,title:'',chapter:1,choicesMade:0,choiceLog:[],messages:[],settings:settings,startedAt:Date.now(),isArc:true,arcType:_arcType,sourceTitle:settings.sourceTitle};
-  _styleRatings={};_ratingTotals={sum:0,count:0};_ghostPaths={};
+  _storyRating=0;_ratingTotals={sum:0,count:0};_ghostPaths={};
   clearTimeline();
   closeArcModal();
   setupGNav();
   document.getElementById('storyLog').innerHTML='';
   document.getElementById('cwrap').innerHTML='';
   document.getElementById('errbox').innerHTML='';
+  var esr=document.getElementById('endStyleRating');if(esr)esr.style.display='none';
   renderCollabBanner();
   showPage('game-page');
   fetchBeat(null,false,0);
