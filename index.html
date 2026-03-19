@@ -773,9 +773,8 @@ body.no-nav{padding-bottom:0;}
     <div class="field" style="margin-bottom:18px;">
       <label class="lbl">Volume</label>
       <div style="display:flex;align-items:center;gap:12px;margin-top:8px;">
-        <span style="font-size:16px;">🔇</span>
+        <button id="muteBtn" onclick="toggleMute()" style="background:var(--black3);border:1px solid var(--border2);border-radius:var(--r-pill);padding:6px 12px;color:var(--white);font-size:13px;cursor:pointer;transition:all .2s;flex-shrink:0;">🔊</button>
         <input type="range" id="musicVolume" min="0" max="100" value="50" oninput="setMusicVolume(this.value)" style="flex:1;accent-color:var(--gold);">
-        <span style="font-size:16px;">🔊</span>
         <span id="volumeLabel" style="font-family:var(--font-mono);font-size:11px;color:var(--white);min-width:35px;">50%</span>
       </div>
     </div>
@@ -1319,7 +1318,7 @@ function renderCollabBanner(){var b=document.getElementById('collabBanner');if(!
    Priority: Hume Octave 2 → ElevenLabs → Browser TTS
    FIX 3: ElevenLabs now uses eleven_turbo_v2_5
 ════════════════════════════════════════ */
-var VOICE={speaking:false,autoRead:false,currentAudio:null,engine:'none'};
+var VOICE={speaking:false,autoRead:false,currentAudio:null,engine:'none',cancelled:false};
 
 function getVoiceCfg(){
   try{return JSON.parse(localStorage.getItem('nx_voice_cfg')||'null');}catch(e){return null;}
@@ -1330,38 +1329,39 @@ var HUME_PROMPTS={horror:'Slow, hushed delivery. Voice drops to near-whispers at
 var ELEVEN_VOICES={horror:'VR6AewLTigWG4xSOukaG',thriller:'TxGEqnHWrfWFTfGW9XjX',noir:'onwK4e9ZLuTAKqWW03F9',romance:'EXAVITQu4vr4xnSDxMaL',fantasy:'jsCqWAovK2LkecY7zXl4',isekai:'MF3mGyEYCl7XYWbV9V6O',mystery:'onwK4e9ZLuTAKqWW03F9',scifi:'pNInz6obpgDQGcFmaJgB',survival:'TxGEqnHWrfWFTfGW9XjX',supernatural:'jsCqWAovK2LkecY7zXl4',historical:'EXAVITQu4vr4xnSDxMaL',random:'onwK4e9ZLuTAKqWW03F9'};
 
 /* ════════════════════════════════════════
-   VOICE ENGINE — all calls go through /api/voice
-   Hume and ElevenLabs keys live on Vercel.
-   Browser never sees them.
+   VOICE ENGINE — routes through /api/voice
    Priority: Hume → ElevenLabs → Browser TTS
+   Stop button works by setting VOICE.cancelled
+   before audio plays.
 ════════════════════════════════════════ */
 async function speakText(text){
   if(!text||!text.trim())return;
   stopSpeaking();
-  /* Try Hume first via server route */
+  VOICE.cancelled=false;
+  /* Try Hume */
   try{
     await _speakHume(text);
-    VOICE.engine='hume';
-    updateVoiceBtn(false);
+    if(!VOICE.cancelled){VOICE.engine='hume';updateVoiceBtn(false);}
     return;
   }catch(e){
     console.warn('[NEXUS/Hume]',e.message);
+    if(VOICE.cancelled)return;
   }
-  /* Fall back to ElevenLabs via server route */
+  /* Fall back to ElevenLabs */
   try{
     await _speakEleven(text);
-    VOICE.engine='elevenlabs';
-    updateVoiceBtn(false);
+    if(!VOICE.cancelled){VOICE.engine='elevenlabs';updateVoiceBtn(false);}
     return;
   }catch(e){
     console.warn('[NEXUS/ElevenLabs]',e.message);
+    if(VOICE.cancelled)return;
   }
-  /* Last resort — free browser TTS */
-  _speakBrowser(text);
-  VOICE.engine='browser';
+  /* Last resort — browser TTS */
+  if(!VOICE.cancelled){_speakBrowser(text);VOICE.engine='browser';}
 }
 
 async function _speakHume(text){
+  if(VOICE.cancelled)return;
   VOICE.speaking=true;updateVoiceBtn(true);
   var genre=(G&&G.genre)||'random';
   var tone=(G&&G.settings&&G.settings.tone)||'balanced';
@@ -1373,16 +1373,20 @@ async function _speakHume(text){
     headers:{'Content-Type':'application/json','x-nexus-token':'nx_83c8a0f2fea04883418d0da02d49eef0'},
     body:JSON.stringify({provider:'hume',text:text,genre:description})
   });
-  if(!res.ok){VOICE.speaking=false;throw new Error('Hume '+res.status);}
+  /* Bail if user hit stop while we were fetching */
+  if(VOICE.cancelled){VOICE.speaking=false;throw new Error('cancelled');}
+  if(!res.ok){VOICE.speaking=false;throw new Error('Hume HTTP '+res.status);}
   var data=await res.json();
-  /* 404 or missing key on server → skip to ElevenLabs */
-  if(res.status===404||res.status===401){VOICE.speaking=false;throw new Error('Hume key not configured on server');}
+  /* Check for server-side error (key missing, quota, etc) */
+  if(data.error||data.message){VOICE.speaking=false;throw new Error('Hume: '+(data.error||data.message));}
   var b64=data.generations&&data.generations[0]&&data.generations[0].audio;
-  if(!b64){VOICE.speaking=false;throw new Error('Hume: no audio');}
+  if(!b64){VOICE.speaking=false;throw new Error('Hume: no audio in response');}
+  if(VOICE.cancelled){VOICE.speaking=false;throw new Error('cancelled');}
   await _playAudio('data:audio/mp3;base64,'+b64,false);
 }
 
 async function _speakEleven(text,voiceIdOverride){
+  if(VOICE.cancelled)return;
   VOICE.speaking=true;updateVoiceBtn(true);
   var genre=(G&&G.genre)||'random';
   var vid=voiceIdOverride||ELEVEN_VOICES[genre]||'onwK4e9ZLuTAKqWW03F9';
@@ -1391,9 +1395,17 @@ async function _speakEleven(text,voiceIdOverride){
     headers:{'Content-Type':'application/json','x-nexus-token':'nx_83c8a0f2fea04883418d0da02d49eef0'},
     body:JSON.stringify({provider:'elevenlabs',text:text,voiceId:vid})
   });
-  if(!res.ok){VOICE.speaking=false;throw new Error('ElevenLabs '+res.status);}
-  if(res.status===404||res.status===401){VOICE.speaking=false;throw new Error('ElevenLabs key not configured on server');}
+  if(VOICE.cancelled){VOICE.speaking=false;throw new Error('cancelled');}
+  if(!res.ok){VOICE.speaking=false;throw new Error('ElevenLabs HTTP '+res.status);}
+  /* Check content type — if JSON it's an error response */
+  var ct=res.headers.get('content-type')||'';
+  if(ct.indexOf('application/json')>-1){
+    var errData=await res.json();
+    VOICE.speaking=false;
+    throw new Error('ElevenLabs: '+(errData.detail||errData.error||'unknown error'));
+  }
   var ab=await res.arrayBuffer();
+  if(VOICE.cancelled){VOICE.speaking=false;throw new Error('cancelled');}
   var url=URL.createObjectURL(new Blob([ab],{type:'audio/mpeg'}));
   await _playAudio(url,true);
 }
@@ -1426,7 +1438,12 @@ function _playAudio(url,revoke){
 }
 
 function stopSpeaking(){
-  if(VOICE.currentAudio){VOICE.currentAudio.pause();VOICE.currentAudio.currentTime=0;VOICE.currentAudio=null;}
+  VOICE.cancelled=true;
+  if(VOICE.currentAudio){
+    VOICE.currentAudio.pause();
+    VOICE.currentAudio.currentTime=0;
+    VOICE.currentAudio=null;
+  }
   if(window.speechSynthesis)window.speechSynthesis.cancel();
   VOICE.speaking=false;
   updateVoiceBtn(false);
@@ -2951,6 +2968,8 @@ function loadUserPrefsUI(){
   var mvLabel=document.getElementById('volumeLabel');
   if(mvSlider)mvSlider.value=vol;
   if(mvLabel)mvLabel.textContent=vol+'%';
+  var muteBtn=document.getElementById('muteBtn');
+  if(muteBtn)muteBtn.textContent=vol===0?'🔇':'🔊';
   document.getElementById('langSelect').value=USER_LANG;
   var voiceOn=USER_PREFS.voiceAuto||false;
   VOICE.autoRead=voiceOn;
@@ -2964,13 +2983,42 @@ function setUserSpeed(spd){USER_PREFS.speed=spd;if(spd==='normal')TW_SPEED=14;el
 function setMusicVolume(val){
   val=parseInt(val);
   USER_PREFS.volume=val;
+  USER_PREFS._preMuteVolume=val;
   var label=document.getElementById('volumeLabel');
   if(label)label.textContent=val+'%';
-  /* Update currently playing music immediately */
+  var muteBtn=document.getElementById('muteBtn');
+  if(muteBtn)muteBtn.textContent=val===0?'🔇':'🔊';
   var audio=document.getElementById('bgMusic');
   if(audio)audio.volume=val/100;
-  /* Update active voice audio too */
   if(typeof VOICE!=='undefined'&&VOICE.currentAudio)VOICE.currentAudio.volume=val/100;
+  saveUserPrefs();
+}
+
+function toggleMute(){
+  var btn=document.getElementById('muteBtn');
+  var slider=document.getElementById('musicVolume');
+  var label=document.getElementById('volumeLabel');
+  var audio=document.getElementById('bgMusic');
+  var isMuted=USER_PREFS.volume===0;
+  if(isMuted){
+    /* Unmute — restore previous volume */
+    var restore=USER_PREFS._preMuteVolume||50;
+    USER_PREFS.volume=restore;
+    if(slider)slider.value=restore;
+    if(label)label.textContent=restore+'%';
+    if(btn)btn.textContent='🔊';
+    if(audio)audio.volume=restore/100;
+    if(typeof VOICE!=='undefined'&&VOICE.currentAudio)VOICE.currentAudio.volume=restore/100;
+  }else{
+    /* Mute — save current volume first */
+    USER_PREFS._preMuteVolume=USER_PREFS.volume||50;
+    USER_PREFS.volume=0;
+    if(slider)slider.value=0;
+    if(label)label.textContent='0%';
+    if(btn)btn.textContent='🔇';
+    if(audio)audio.volume=0;
+    if(typeof VOICE!=='undefined'&&VOICE.currentAudio)VOICE.currentAudio.volume=0;
+  }
   saveUserPrefs();
 }
 function setLanguage(lang){USER_LANG=lang;USER_PREFS.lang=lang;saveUserPrefs();}
@@ -2981,8 +3029,6 @@ window._currentTrack=null;
 window.stopMusic=function(){var audio=document.getElementById('bgMusic');if(audio){audio.pause();audio.currentTime=0;window._currentTrack=null;}};
 window.playMusicForGenre=function(genre){
   var audio=document.getElementById('bgMusic');if(!audio)return;
-  /* Each genre has its own file. Genres marked * need a file added to GitHub.
-     Until the file exists the audio element just stays silent — no crash. */
   var map={
     thriller:    '/thriller.mp3',
     fantasy:     '/fantasy.mp3',
@@ -2998,16 +3044,36 @@ window.playMusicForGenre=function(genre){
     random:      '/adventure.mp3'
   };
   var track=map[genre]||'/fantasy.mp3';
-  if(window._currentTrack===track)return;
-  window._currentTrack=track;
+  if(window._currentTrack===track&&!audio.paused)return;
+  /* Reset fully before loading new track */
+  audio.pause();
+  audio.currentTime=0;
+  audio.src='';
+  window._currentTrack=null;
   audio.src=track;
+  audio.loop=true;
   audio.volume=(USER_PREFS&&USER_PREFS.volume!==undefined)?USER_PREFS.volume/100:0.5;
-  /* Silently skip if file doesn't exist yet — no error shown to user */
   audio.onerror=function(){
-    audio.src='';
-    window._currentTrack=null;
+    console.warn('[NEXUS/Music] File not found:',track);
+    audio.src='';window._currentTrack=null;
   };
-  audio.play().catch(function(){});
+  audio.load();
+  audio.play().then(function(){
+    window._currentTrack=track;
+  }).catch(function(e){
+    /* Autoplay blocked — retry on next user interaction */
+    console.warn('[NEXUS/Music] Autoplay blocked:',e.message);
+    window._currentTrack=null;
+    var unlock=function(){
+      audio.play().then(function(){
+        window._currentTrack=track;
+        document.removeEventListener('click',unlock);
+        document.removeEventListener('keydown',unlock);
+      }).catch(function(){});
+    };
+    document.addEventListener('click',unlock,{once:true});
+    document.addEventListener('keydown',unlock,{once:true});
+  });
 };
 
 (function(){
