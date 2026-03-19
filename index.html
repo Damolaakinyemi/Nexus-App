@@ -289,7 +289,7 @@ body.no-nav{padding-bottom:0;}
 .gn-ch{font-family:var(--font-mono);font-size:10px;color:var(--white4);}
 .gn-r{display:flex;align-items:center;gap:7px;}
 .game-layout{display:flex;max-width:1100px;margin:0 auto;width:100%;}
-.game-main{flex:1;min-width:0;padding:16px 20px 24px;}
+.game-main{flex:1;min-width:0;padding:16px 20px calc(88px + var(--safe-bottom));}
 .choice-sidebar{width:260px;flex-shrink:0;padding:16px;border-left:1px solid var(--border);position:sticky;top:52px;max-height:calc(100vh - 52px);overflow-y:auto;display:flex;flex-direction:column;gap:12px;}
 @media(max-width:860px){.choice-sidebar{display:none;}}
 .sidebar-title{font-family:var(--font-mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--white4);margin-bottom:8px;}
@@ -333,7 +333,7 @@ body.no-nav{padding-bottom:0;}
 .rating-avg{font-family:var(--font-mono);font-size:9px;color:var(--white4);white-space:nowrap;}
 
 /* Choices */
-.cwrap{display:flex;flex-direction:column;gap:9px;margin-top:14px;margin-bottom:20px;}
+.cwrap{display:flex;flex-direction:column;gap:9px;margin-top:14px;margin-bottom:calc(80px + var(--safe-bottom));}
 .chdr{font-family:var(--font-mono);font-size:10px;letter-spacing:.15em;color:var(--white4);text-transform:uppercase;text-align:center;margin-bottom:4px;}
 .cbtn{background:rgba(21,13,38,.9);border:1px solid rgba(160,100,240,.18);color:#f5f2ff;padding:16px 18px;border-radius:var(--r-sm);cursor:pointer;font-family:var(--font-serif);font-size:17px;line-height:1.5;text-align:left;transition:all .22s;display:flex;align-items:flex-start;gap:12px;}
 .cbtn:hover{border-color:var(--gold);transform:translateX(4px);}
@@ -725,26 +725,15 @@ body.no-nav{padding-bottom:0;}
     <div class="modal-sub">Configure your API key and customize the NEXUS experience.</div>
 
     <!-- ══ ANTHROPIC API KEY (replaces /api/claude backend) ══ -->
-    <div class="sec-title">🔑 Claude AI (Required)</div>
+    <div class="sec-title">🔑 Claude AI</div>
     <div class="api-cfg-banner">
-      <div class="api-cfg-banner-title">✦ Anthropic API Key</div>
-      <div class="api-cfg-banner-desc">NEXUS runs entirely in your browser. Paste your Anthropic API key below — it's stored only in your local browser and never sent anywhere except directly to Anthropic.</div>
-      <div class="api-key-row">
-        <div style="flex:1">
-          <label class="lbl">Anthropic API Key</label>
-          <input class="inp" id="cfgAnthropicKey" type="password" placeholder="sk-ant-api03-..." autocomplete="off" style="font-family:var(--font-mono);font-size:12px;" oninput="onAnthropicKeyInput()">
-        </div>
-        <div id="anthropicKeyDot" class="api-status-dot none" title="No key set"></div>
+      <div class="api-cfg-banner-title" style="display:flex;align-items:center;gap:8px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:#5de8a0;box-shadow:0 0 6px #5de8a0;flex-shrink:0;"></div>
+        API Key — Server Secured
       </div>
-      <div id="anthropicKeyMsg" style="font-family:var(--font-mono);font-size:9px;margin-top:6px;min-height:14px;"></div>
-      <div style="display:flex;gap:8px;margin-top:10px;">
-        <button class="btn btn-p btn-sm" onclick="saveAnthropicKey()" style="flex:1;padding:10px;">✓ Save Key</button>
-        <button class="btn btn-out btn-sm" onclick="testAnthropicKey()" id="testAnthropicBtn" style="padding:10px 14px;">▶ Test</button>
-        <button class="btn btn-out btn-sm" onclick="clearAnthropicKey()" style="padding:10px 14px;border-color:rgba(248,113,113,.3);color:var(--rose);">✕ Clear</button>
-      </div>
-      <div style="font-family:var(--font-mono);font-size:8px;color:var(--white4);margin-top:10px;line-height:1.7;padding:8px;background:rgba(255,255,255,.02);border-radius:8px;">
-        Get a free key at <strong style="color:var(--gold2)">console.anthropic.com</strong> → API Keys<br>
-        Your key is stored in <strong>localStorage</strong> on this device only.
+      <div class="api-cfg-banner-desc">Your Anthropic key lives on Vercel's servers — exactly how Google hides its Maps key. No visitor can ever see it, and no one needs to enter anything to use the app.</div>
+      <div style="background:rgba(93,232,160,.06);border:1px solid rgba(93,232,160,.18);border-radius:var(--r-sm);padding:10px 14px;font-family:var(--font-mono);font-size:10px;color:#5de8a0;letter-spacing:.07em;line-height:1.8;">
+        ✓ Key stored on Vercel<br>✓ Never sent to the browser<br>✓ Works for every visitor automatically
       </div>
     </div>
 
@@ -1240,30 +1229,56 @@ async function testAnthropicKey(){
 }
 
 /* Core fetch wrapper — calls Anthropic API directly from browser */
+/* ════════════════════════════════════════
+   CORE API CALL — routes through /api/story
+   Your Anthropic key lives on Vercel's servers.
+   The browser never sees it. Same way Google
+   and every real app hides their keys.
+════════════════════════════════════════ */
 async function callClaude(messages, systemPrompt, maxTokens, keyOverride){
-  var key=keyOverride||getAnthropicKey();
-  if(!key) throw new Error('No Anthropic API key set. Open ⚙ Settings → Claude AI to add your key.');
-  var body={model:'claude-sonnet-4-20250514',max_tokens:maxTokens||700,messages:messages};
-  if(systemPrompt)body.system=systemPrompt;
-  var res=await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{
-      'Content-Type':'application/json',
-      'x-api-key':key,
-      'anthropic-version':'2023-06-01',
-      'anthropic-dangerous-direct-browser-access':'true'
-    },
-    body:JSON.stringify(body)
-  });
-  var data=await res.json();
-  if(!res.ok||data.error){
-    var msg=(data.error&&data.error.message)||'API error '+res.status;
-    var err=new Error(msg);
-    err.status=res.status;
-    err.apiError=data.error;
-    throw err;
+  var body = {
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: maxTokens || 700,
+    messages: messages
+  };
+  if(systemPrompt) body.system = systemPrompt;
+
+  /* If a keyOverride is passed (only used for the Settings test button),
+     call Anthropic directly so the user can verify their own key.
+     In normal story generation keyOverride is never passed. */
+  if(keyOverride){
+    var direct = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': keyOverride,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify(body)
+    });
+    var ddata = await direct.json();
+    if(!direct.ok || ddata.error){
+      var derr = new Error((ddata.error && ddata.error.message) || 'API error '+direct.status);
+      derr.status = direct.status; derr.apiError = ddata.error; throw derr;
+    }
+    return ddata.content && ddata.content[0] && ddata.content[0].text;
   }
-  return data.content&&data.content[0]&&data.content[0].text;
+
+  /* Normal path — call your Vercel route. Key stays on server. */
+  var res = await fetch('/api/story', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  var data = await res.json();
+  if(!res.ok || data.error){
+    var msg = (data.error && data.error.message) || data.error || 'API error ' + res.status;
+    var err = new Error(msg);
+    err.status = res.status; err.apiError = data.error; throw err;
+  }
+  return data.content && data.content[0] && data.content[0].text;
 }
 
 /* ════════════════════════════════════════
@@ -1408,13 +1423,26 @@ function updateVoiceBtn(speaking){
   var btn=document.getElementById('btnVoice');
   var badge=document.getElementById('voiceEngineBadge');
   if(!btn)return;
-  if(speaking){btn.textContent='⏹ Stop';btn.style.borderColor='var(--teal)';btn.style.color='var(--teal)';}
-  else{
+  if(speaking){
+    btn.textContent='⏹ Stop';
+    btn.style.borderColor='var(--teal)';
+    btn.style.color='var(--teal)';
+    // Show engine badge only while playing
+    var cfg2=getVoiceCfg();
+    if(badge){
+      if(cfg2&&cfg2.humeKey){badge.style.display='inline';badge.className='voice-strip hume';badge.textContent='Hume';}
+      else if(cfg2&&cfg2.elevenKey){badge.style.display='inline';badge.className='voice-strip eleven';badge.textContent='ElevenLabs';}
+      else badge.style.display='none';
+    }
+  } else {
+    // Idle state — clean button, no badge
     var cfg=getVoiceCfg();
-    if(cfg&&cfg.humeKey){btn.textContent='✦ Listen';if(badge){badge.style.display='inline';badge.className='voice-strip hume';badge.textContent='Hume';}}
-    else if(cfg&&cfg.elevenKey){btn.textContent='⚡ Listen';if(badge){badge.style.display='inline';badge.className='voice-strip eleven';badge.textContent='ElevenLabs';}}
-    else{btn.textContent='🔊 Listen';if(badge)badge.style.display='none';}
-    btn.style.borderColor='';btn.style.color='';
+    if(cfg&&cfg.humeKey){btn.textContent='✦ Listen';}
+    else if(cfg&&cfg.elevenKey){btn.textContent='⚡ Listen';}
+    else{btn.textContent='🔊 Listen';}
+    btn.style.borderColor='';
+    btn.style.color='';
+    if(badge) badge.style.display='none';
   }
 }
 
@@ -1724,7 +1752,7 @@ function loadCharsFromSave(sc){_chars=[];_charIdCounter=0;if(sc&&sc.length){sc.f
 function goWiz(){
   /* Check for API key before letting user start a story */
   if(!CU||CU.guest){/* guests can try but will hit error when generating */}
-  else if(!getAnthropicKey()){showHealToast('Add your Claude API key in ⚙ Settings first!',true);openUserSettings();return;}
+  /* key is server-side — always available */
   W={genre:null,tone:'balanced',pace:'medium',danger:'medium',rom:'subtle',len:'medium',customCh:25,theme:'arcane',chars:{h:'',l:'',v:'',m:''}};
   _customAuthor=null;setSlider(25);
   document.querySelectorAll('.gc').forEach(function(c){c.classList.remove('on');});
@@ -1800,7 +1828,7 @@ function buildSysPrompt(){
 function friendlyErr(err,httpStatus){
   if(!err)return 'Something went wrong.';
   var msg=err.message||String(err);
-  if(httpStatus===401||msg.indexOf('auth')>-1||msg.indexOf('invalid_api_key')>-1)return 'Invalid API key. Check ⚙ Settings → Claude AI.';
+  if(httpStatus===401||msg.indexOf('auth')>-1||msg.indexOf('invalid_api_key')>-1)return 'Server authentication error — check your ANTHROPIC_API_KEY in Vercel environment variables.';
   if(httpStatus===429||msg.indexOf('rate_limit')>-1||msg.indexOf('exceeded')>-1)return 'Rate limit hit. Wait a moment — your story is saved!';
   if(httpStatus>=500)return 'Anthropic server hiccup. Retrying…';
   if(msg.indexOf('No Anthropic API key')>-1)return msg;
@@ -2381,7 +2409,7 @@ function forkFromCanon(canonIdx) {
   var canon = JSON.parse(localStorage.getItem('nx_community_canon') || '[]');
   var source = canon[canonIdx];
   if (!source) return;
-  if (!getAnthropicKey()) { showHealToast('Add your API key in Settings first', true); openUserSettings(); return; }
+  /* key is server-side */
   G = {
     genre: source.genre, seed: source.seed,
     title: 'Fork of: ' + source.title,
@@ -2832,13 +2860,31 @@ function openUserSettings(){
   if(m)m.classList.add('on');
   loadUserPrefsUI();
   loadVoiceConfigUI();
-  /* Load the saved Anthropic key */
-  var k=getAnthropicKey();
-  var kf=document.getElementById('cfgAnthropicKey');
-  if(kf&&k)kf.value=k;
-  updateAnthropicKeyDot();
+  /* Key is server-side — nothing to load */
 }
-function closeUserSettings(){var m=document.getElementById('userSettingsModal');if(m)m.classList.remove('on');saveUserPrefs();}
+function closeUserSettings(){
+  var m=document.getElementById('userSettingsModal');
+  if(m)m.classList.remove('on');
+  /* Anthropic key is server-side — nothing to save from UI */
+  /* Auto-save voice keys if typed */
+  var hk=document.getElementById('voiceHumeKey');
+  var ek=document.getElementById('voiceElevenKey');
+  var vid=document.getElementById('voiceElevenVoiceId');
+  var hVal=hk?hk.value.trim():'';
+  var eVal=ek?ek.value.trim():'';
+  var existing=getVoiceCfg()||{};
+  var newCfg={
+    humeKey:  hVal  || existing.humeKey  || '',
+    elevenKey:eVal  || existing.elevenKey|| '',
+    elevenVoiceId:(vid?vid.value:'')||existing.elevenVoiceId||''
+  };
+  if(newCfg.humeKey||newCfg.elevenKey){
+    localStorage.setItem('nx_voice_cfg',JSON.stringify(newCfg));
+  }
+  saveUserPrefs();
+  /* Refresh dashboard nudge */
+  if(typeof rdash==='function')rdash();
+}
 function loadUserPrefsUI(){
   var theme=USER_PREFS.theme||'dark';
   document.getElementById('themeDark').className=theme==='dark'?'btn btn-p btn-sm':'btn btn-out btn-sm';
@@ -2868,10 +2914,33 @@ window._currentTrack=null;
 window.stopMusic=function(){var audio=document.getElementById('bgMusic');if(audio){audio.pause();audio.currentTime=0;window._currentTrack=null;}};
 window.playMusicForGenre=function(genre){
   var audio=document.getElementById('bgMusic');if(!audio)return;
-  var map={thriller:'/thriller.mp3',fantasy:'/fantasy.mp3',horror:'/horror.mp3',isekai:'/isekai.mp3',mystery:'/mystery.mp3',romance:'/romance.mp3',scifi:'/scifi.mp3',adventure:'/adventure.mp3',noir:'/thriller.mp3',survival:'/adventure.mp3',supernatural:'/horror.mp3',historical:'/adventure.mp3',random:'/fantasy.mp3'};
-  var track=map[genre]||'/fantasy.mp3';if(window._currentTrack===track)return;
-  window._currentTrack=track;audio.src=track;
+  /* Each genre has its own file. Genres marked * need a file added to GitHub.
+     Until the file exists the audio element just stays silent — no crash. */
+  var map={
+    thriller:    '/thriller.mp3',
+    fantasy:     '/fantasy.mp3',
+    horror:      '/horror.mp3',
+    isekai:      '/isekai.mp3',
+    mystery:     '/mystery.mp3',
+    romance:     '/romance.mp3',
+    scifi:       '/scifi.mp3',
+    adventure:   '/adventure.mp3',
+    noir:        '/noir.mp3',         /* needs file */
+    survival:    '/survival.mp3',     /* needs file */
+    supernatural:'/supernatural.mp3', /* needs file */
+    historical:  '/historical.mp3',   /* needs file */
+    random:      '/fantasy.mp3'
+  };
+  var track=map[genre]||'/fantasy.mp3';
+  if(window._currentTrack===track)return;
+  window._currentTrack=track;
+  audio.src=track;
   audio.volume=(USER_PREFS.volume!==undefined)?USER_PREFS.volume/100:0.5;
+  /* Silently skip if file doesn't exist yet — no error shown to user */
+  audio.onerror=function(){
+    audio.src='';
+    window._currentTrack=null;
+  };
   audio.play().catch(function(){});
 };
 
