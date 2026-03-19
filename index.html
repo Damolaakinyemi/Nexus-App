@@ -1120,12 +1120,12 @@ body.no-nav{padding-bottom:0;}
     <div class="mood-title">How are you feeling?</div>
     <div class="mood-sub">NEXUS will shape the story's pace and tone to match your mood right now.</div>
     <div class="mood-grid">
-      <div class="mood-btn" onclick="pickMood('excited')" data-mood="excited"><span class="mood-emoji">⚡</span><span class="mood-label">Excited</span></div>
-      <div class="mood-btn" onclick="pickMood('calm')" data-mood="calm"><span class="mood-emoji">🌙</span><span class="mood-label">Calm</span></div>
-      <div class="mood-btn" onclick="pickMood('anxious')" data-mood="anxious"><span class="mood-emoji">🌀</span><span class="mood-label">Anxious</span></div>
-      <div class="mood-btn" onclick="pickMood('sad')" data-mood="sad"><span class="mood-emoji">🌧</span><span class="mood-label">Sad</span></div>
-      <div class="mood-btn" onclick="pickMood('restless')" data-mood="restless"><span class="mood-emoji">🔥</span><span class="mood-label">Restless</span></div>
-      <div class="mood-btn" onclick="pickMood('curious')" data-mood="curious"><span class="mood-emoji">✨</span><span class="mood-label">Curious</span></div>
+      <div class="mood-btn" onclick="selectMood('excited')" data-mood="excited"><span class="mood-emoji">⚡</span><span class="mood-label">Excited</span></div>
+      <div class="mood-btn" onclick="selectMood('calm')" data-mood="calm"><span class="mood-emoji">🌙</span><span class="mood-label">Calm</span></div>
+      <div class="mood-btn" onclick="selectMood('anxious')" data-mood="anxious"><span class="mood-emoji">🌀</span><span class="mood-label">Anxious</span></div>
+      <div class="mood-btn" onclick="selectMood('sad')" data-mood="sad"><span class="mood-emoji">🌧</span><span class="mood-label">Sad</span></div>
+      <div class="mood-btn" onclick="selectMood('restless')" data-mood="restless"><span class="mood-emoji">🔥</span><span class="mood-label">Restless</span></div>
+      <div class="mood-btn" onclick="selectMood('curious')" data-mood="curious"><span class="mood-emoji">✨</span><span class="mood-label">Curious</span></div>
     </div>
     <button class="mood-skip" onclick="closeMoodOverlay(null)">Skip — just start the story</button>
   </div>
@@ -2102,6 +2102,17 @@ function pickMood(mood) {
   document.querySelectorAll('.mood-btn').forEach(function(b){
     b.classList.toggle('on', b.dataset.mood === mood);
   });
+}
+
+/* One-tap version — selects and immediately proceeds */
+function selectMood(mood) {
+  // Highlight the tapped button briefly so user sees feedback
+  document.querySelectorAll('.mood-btn').forEach(function(b){
+    b.classList.toggle('on', b.dataset.mood === mood);
+  });
+  CURRENT_MOOD = mood;
+  // Short delay so the highlight is visible, then proceed
+  setTimeout(function(){ closeMoodOverlay(mood); }, 280);
 }
 
 function closeMoodOverlay(mood) {
