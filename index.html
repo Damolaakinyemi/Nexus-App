@@ -788,39 +788,28 @@ body.no-nav{padding-bottom:0;}
 
     <!-- AI VOICE NARRATION -->
     <div class="sec-title">🎙️ AI Voice Narration</div>
-    <div id="voiceEngineStatus" style="margin-bottom:16px;"></div>
-    <div class="vcfg" style="border-color:rgba(160,100,240,.15);">
-      <div class="vcfg-title" style="color:var(--gold2);">✦ Hume AI — Octave 2 <span style="font-family:var(--font-mono);font-size:7px;padding:2px 8px;border-radius:50px;background:rgba(160,100,240,.1);border:1px solid rgba(160,100,240,.2);color:var(--gold2);">PRIMARY</span></div>
-      <div class="vcfg-desc">Understands genre &amp; emotion in context. No manual voice selection needed.</div>
-      <div class="field" style="margin-bottom:6px;">
-        <label class="lbl">Hume API Key</label>
-        <input class="inp" id="voiceHumeKey" type="password" placeholder="hume_..." autocomplete="off" style="font-size:13px;font-family:var(--font-mono);">
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
+      <div class="vcfg" style="border-color:rgba(160,100,240,.2);">
+        <div class="vcfg-title" style="color:var(--gold2);display:flex;align-items:center;gap:8px;">
+          <div style="width:7px;height:7px;border-radius:50%;background:#5de8a0;flex-shrink:0;"></div>
+          Hume AI — Octave 2
+          <span style="font-family:var(--font-mono);font-size:7px;padding:2px 8px;border-radius:50px;background:rgba(160,100,240,.1);border:1px solid rgba(160,100,240,.2);color:var(--gold2);">PRIMARY</span>
+        </div>
+        <div class="vcfg-desc">Genre-aware emotional narration. Key secured on server — no setup needed.</div>
+        <div style="font-family:var(--font-mono);font-size:9px;color:#5de8a0;letter-spacing:.07em;">✓ Key stored on Vercel · auto-selects voice per genre</div>
+      </div>
+      <div class="vcfg" style="border-color:rgba(93,232,160,.2);">
+        <div class="vcfg-title" style="color:#5de8a0;display:flex;align-items:center;gap:8px;">
+          <div style="width:7px;height:7px;border-radius:50%;background:#5de8a0;flex-shrink:0;"></div>
+          ElevenLabs
+          <span style="font-family:var(--font-mono);font-size:7px;padding:2px 8px;border-radius:50px;background:rgba(93,232,160,.08);border:1px solid rgba(93,232,160,.2);color:#5de8a0;">FALLBACK</span>
+        </div>
+        <div class="vcfg-desc">Premium quality backup voice. Activates automatically if Hume is unavailable.</div>
+        <div style="font-family:var(--font-mono);font-size:9px;color:#5de8a0;letter-spacing:.07em;">✓ Key stored on Vercel · eleven_turbo_v2_5</div>
       </div>
     </div>
-    <div class="vcfg" style="border-color:rgba(52,211,153,.22);">
-      <div class="vcfg-title" style="color:#5de8a0;">⚡ ElevenLabs <span style="font-family:var(--font-mono);font-size:7px;padding:2px 8px;border-radius:50px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.25);color:#5de8a0;">FALLBACK</span></div>
-      <div class="vcfg-desc">Premium voice quality. Used automatically if Hume is unavailable.</div>
-      <div class="field" style="margin-bottom:6px;">
-        <label class="lbl">ElevenLabs API Key</label>
-        <input class="inp" id="voiceElevenKey" type="password" placeholder="sk_..." autocomplete="off" style="font-size:13px;font-family:var(--font-mono);">
-      </div>
-      <div class="field" style="margin-bottom:0;">
-        <label class="lbl">Override Voice (optional)</label>
-        <select class="inp" id="voiceElevenVoiceId" style="cursor:pointer;font-family:var(--font-mono);font-size:11px;">
-          <option value="">Auto — picks best voice per genre</option>
-          <option value="onwK4e9ZLuTAKqWW03F9">Daniel — Deep British (mystery/noir)</option>
-          <option value="TxGEqnHWrfWFTfGW9XjX">Josh — American narrator (thriller)</option>
-          <option value="EXAVITQu4vr4xnSDxMaL">Bella — Warm &amp; intimate (romance)</option>
-          <option value="jsCqWAovK2LkecY7zXl4">Freya — Expressive British (fantasy)</option>
-          <option value="pNInz6obpgDQGcFmaJgB">Adam — Authoritative (scifi)</option>
-          <option value="VR6AewLTigWG4xSOukaG">Arnold — Gruff (horror/survival)</option>
-          <option value="MF3mGyEYCl7XYWbV9V6O">Elli — Youthful (isekai)</option>
-        </select>
-      </div>
-    </div>
-    <div style="display:flex;gap:9px;margin-top:4px;margin-bottom:6px;">
-      <button class="btn btn-p" style="flex:1;padding:12px;" onclick="saveVoiceConfig()">✓ Save Voice Settings</button>
-      <button class="btn btn-out btn-sm" onclick="testVoiceNow()" id="testVoiceBtn" style="padding:10px 16px;">▶ Test</button>
+    <div style="display:flex;gap:9px;margin-bottom:6px;">
+      <button class="btn btn-p" style="flex:1;padding:12px;" onclick="testVoiceNow()" id="testVoiceBtn">▶ Test Voice</button>
     </div>
     <div id="voiceConfigMsg" class="msg" style="margin-bottom:14px;"></div>
     <div style="height:1px;background:var(--border-s);margin:4px 0 20px;"></div>
@@ -1331,49 +1320,70 @@ var HUME_PROMPTS={horror:'Slow, hushed delivery. Voice drops to near-whispers at
 /* FIX 3: Updated to eleven_turbo_v2_5 */
 var ELEVEN_VOICES={horror:'VR6AewLTigWG4xSOukaG',thriller:'TxGEqnHWrfWFTfGW9XjX',noir:'onwK4e9ZLuTAKqWW03F9',romance:'EXAVITQu4vr4xnSDxMaL',fantasy:'jsCqWAovK2LkecY7zXl4',isekai:'MF3mGyEYCl7XYWbV9V6O',mystery:'onwK4e9ZLuTAKqWW03F9',scifi:'pNInz6obpgDQGcFmaJgB',survival:'TxGEqnHWrfWFTfGW9XjX',supernatural:'jsCqWAovK2LkecY7zXl4',historical:'EXAVITQu4vr4xnSDxMaL',random:'onwK4e9ZLuTAKqWW03F9'};
 
+/* ════════════════════════════════════════
+   VOICE ENGINE — all calls go through /api/voice
+   Hume and ElevenLabs keys live on Vercel.
+   Browser never sees them.
+   Priority: Hume → ElevenLabs → Browser TTS
+════════════════════════════════════════ */
 async function speakText(text){
   if(!text||!text.trim())return;
   stopSpeaking();
-  var cfg=getVoiceCfg();
-  if(cfg&&cfg.humeKey){
-    try{await _speakHume(text,cfg.humeKey);VOICE.engine='hume';updateVoiceBtn(false);return;}
-    catch(e){console.warn('[NEXUS/Hume]',e.message);}
+  /* Try Hume first via server route */
+  try{
+    await _speakHume(text);
+    VOICE.engine='hume';
+    updateVoiceBtn(false);
+    return;
+  }catch(e){
+    console.warn('[NEXUS/Hume]',e.message);
   }
-  if(cfg&&cfg.elevenKey){
-    try{await _speakEleven(text,cfg.elevenKey,cfg.elevenVoiceId);VOICE.engine='elevenlabs';updateVoiceBtn(false);return;}
-    catch(e){console.warn('[NEXUS/ElevenLabs]',e.message);}
+  /* Fall back to ElevenLabs via server route */
+  try{
+    await _speakEleven(text);
+    VOICE.engine='elevenlabs';
+    updateVoiceBtn(false);
+    return;
+  }catch(e){
+    console.warn('[NEXUS/ElevenLabs]',e.message);
   }
+  /* Last resort — free browser TTS */
   _speakBrowser(text);
   VOICE.engine='browser';
 }
 
-async function _speakHume(text,key){
+async function _speakHume(text){
   VOICE.speaking=true;updateVoiceBtn(true);
   var genre=(G&&G.genre)||'random';
   var tone=(G&&G.settings&&G.settings.tone)||'balanced';
   var author=(G&&G.settings&&G.settings.customAuthor)||(AUTHOR_DB[genre]&&AUTHOR_DB[genre].name)||'';
-  var toneNote={dark:' Dark, morally grey.',romantic:' Warmth and longing colour every word.',funny:' Dry wit — underplay the comedy.',epic:' Mythic scale.',mysterious:' Something is being withheld.'}[tone]||'';
-  var authorNote=author?' Narrating a '+author+' novel.':'';
-  var description=HUME_PROMPTS[genre]+toneNote+authorNote;
-  var res=await fetch('https://api.hume.ai/v0/tts',{method:'POST',headers:{'Content-Type':'application/json','X-Hume-Api-Key':key},body:JSON.stringify({utterances:[{text:text,description:description}],format:{type:'mp3'},num_generations:1})});
+  var toneNote={dark:' Dark, morally grey.',romantic:' Warmth and longing colour every word.',funny:' Dry wit.',epic:' Mythic scale.',mysterious:' Something is withheld.'}[tone]||'';
+  var description=HUME_PROMPTS[genre]+toneNote+(author?' Narrating a '+author+' novel.':'');
+  var res=await fetch('/api/voice',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({provider:'hume',text:text,genre:description})
+  });
   if(!res.ok){VOICE.speaking=false;throw new Error('Hume '+res.status);}
   var data=await res.json();
+  /* 404 or missing key on server → skip to ElevenLabs */
+  if(res.status===404||res.status===401){VOICE.speaking=false;throw new Error('Hume key not configured on server');}
   var b64=data.generations&&data.generations[0]&&data.generations[0].audio;
-  if(!b64){VOICE.speaking=false;throw new Error('Hume: no audio returned');}
+  if(!b64){VOICE.speaking=false;throw new Error('Hume: no audio');}
   await _playAudio('data:audio/mp3;base64,'+b64,false);
 }
 
-async function _speakEleven(text,key,voiceIdOverride){
+async function _speakEleven(text,voiceIdOverride){
   VOICE.speaking=true;updateVoiceBtn(true);
   var genre=(G&&G.genre)||'random';
   var vid=voiceIdOverride||ELEVEN_VOICES[genre]||'onwK4e9ZLuTAKqWW03F9';
-  var res=await fetch('https://api.elevenlabs.io/v1/text-to-speech/'+vid,{
+  var res=await fetch('/api/voice',{
     method:'POST',
-    headers:{'Content-Type':'application/json','xi-api-key':key},
-    /* FIX 3: eleven_turbo_v2_5 */
-    body:JSON.stringify({text:text,model_id:'eleven_turbo_v2_5',voice_settings:{stability:0.48,similarity_boost:0.82,style:0.28,use_speaker_boost:true}})
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({provider:'elevenlabs',text:text,voiceId:vid})
   });
   if(!res.ok){VOICE.speaking=false;throw new Error('ElevenLabs '+res.status);}
+  if(res.status===404||res.status===401){VOICE.speaking=false;throw new Error('ElevenLabs key not configured on server');}
   var ab=await res.arrayBuffer();
   var url=URL.createObjectURL(new Blob([ab],{type:'audio/mpeg'}));
   await _playAudio(url,true);
