@@ -2991,12 +2991,11 @@ window.playMusicForGenre=function(genre){
     mystery:     '/mystery.mp3',
     romance:     '/romance.mp3',
     scifi:       '/scifi.mp3',
-    adventure:   '/adventure.mp3',
-    noir:        '/noir.mp3',         /* needs file */
-    survival:    '/survival.mp3',     /* needs file */
-    supernatural:'/supernatural.mp3', /* needs file */
-    historical:  '/historical.mp3',   /* needs file */
-    random:      '/fantasy.mp3'
+    noir:        '/noir.mp3',
+    survival:    '/survival.mp3',
+    supernatural:'/supernatural.mp3',
+    historical:  '/historical.mp3',
+    random:      '/adventure.mp3'
   };
   var track=map[genre]||'/fantasy.mp3';
   if(window._currentTrack===track)return;
