@@ -1,1 +1,6 @@
-
+{
+  "functions": {
+    "api/story.js": { "memory": 512, "maxDuration": 30 },
+    "api/voice.js": { "memory": 512, "maxDuration": 30 }
+  }
+}
