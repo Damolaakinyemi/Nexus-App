@@ -8,6 +8,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="NEXUS">
 <meta name="description" content="Stories written for you, shaped by your choices. Powered by Claude AI.">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
+<meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+<meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
 <title>NEXUS — Stories Written For You</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -1113,6 +1117,8 @@ body.no-nav{padding-bottom:0;}
 <div class="heal-toast" id="healToast"></div>
 <script>
 'use strict';
+var NEXUS_API_TOKEN = "nx_83c8a0f2fea04883418d0da02d49eef0";
+
 
 /* ══════════════════════════════════════════════
    NEXUS v7.1 — Browser-native, no backend needed
@@ -1257,7 +1263,10 @@ async function callClaude(messages, systemPrompt, maxTokens, keyOverride){
   /* Normal path — call your Vercel route. Key stays on server. */
   var res = await fetch('/api/story', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-nexus-token': 'nx_83c8a0f2fea04883418d0da02d49eef0'
+    },
     body: JSON.stringify(body)
   });
 
@@ -1298,7 +1307,7 @@ function clearTimeline(){var list=document.getElementById('timelineList');if(lis
    COLLABORATIVE ARCS
 ════════════════════════════════════════ */
 var COLLAB={active:false,sessionCode:'',myPov:null,chars:[]};
-function openCollabModal(){var stories=CU&&!CU.guest?gstories(CU.email):[];var activeStory=stories.filter(function(s){return !s.ended;})[0];var chars=activeStory&&activeStory.settings&&activeStory.settings.charList&&activeStory.settings.charList.length?activeStory.settings.charList.filter(function(c){return c.name;}):[{name:'The Protagonist',role:'Hero',emoji:'🧝'},{name:'The Shadow',role:'Villain',emoji:'🗡️'}];COLLAB.chars=chars;var container=document.getElementById('collabPovCards');container.innerHTML='';chars.slice(0,4).forEach(function(c,i){var card=document.createElement('div');card.className='collab-pov-card'+(i===0?' on':'');card.onclick=function(){document.querySelectorAll('.collab-pov-card').forEach(function(x){x.classList.remove('on');});card.classList.add('on');COLLAB.myPov=i;};card.innerHTML='<div class="collab-pov-name">'+(c.emoji||'✨')+' '+(c.name||'Character')+'</div><div class="collab-pov-role">'+(c.role||'Character')+'</div>';container.appendChild(card);});COLLAB.myPov=0;document.getElementById('collabModal').classList.add('on');}
+function openCollabModal(){var stories=CU&&!CU.guest?gstories(CU.email):[];var activeStory=stories.filter(function(s){return !s.ended;})[0];var chars=activeStory&&activeStory.settings&&activeStory.settings.charList&&activeStory.settings.charList.length?activeStory.settings.charList.filter(function(c){return c.name;}):[{name:'The Protagonist',role:'Hero',emoji:'🧝'},{name:'The Shadow',role:'Villain',emoji:'🗡️'}];COLLAB.chars=chars;var container=document.getElementById('collabPovCards');container.innerHTML='';chars.slice(0,4).forEach(function(c,i){var card=document.createElement('div');card.className='collab-pov-card'+(i===0?' on':'');card.onclick=function(){document.querySelectorAll('.collab-pov-card').forEach(function(x){x.classList.remove('on');});card.classList.add('on');COLLAB.myPov=i;};card.innerHTML='<div class="collab-pov-name">'+(c.emoji||'✨')+' '+escHtml(c.name||'Character')+'</div><div class="collab-pov-role">'+escHtml(c.role||'Character')+'</div>';container.appendChild(card);});COLLAB.myPov=0;document.getElementById('collabModal').classList.add('on');}
 function closeCollabModal(){document.getElementById('collabModal').classList.remove('on');}
 function generateSessionCode(){var chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';var code='NEXUS-';for(var i=0;i<4;i++)code+=chars[Math.floor(Math.random()*chars.length)];return code;}
 function startCollabSession(){var code=generateSessionCode();COLLAB.active=true;COLLAB.sessionCode=code;var povIdx=Array.from(document.querySelectorAll('.collab-pov-card')).findIndex(function(c){return c.classList.contains('on');});COLLAB.myPov=Math.max(0,povIdx);localStorage.setItem('nx_collab_'+code,JSON.stringify({code:code,chars:COLLAB.chars,started:Date.now()}));closeCollabModal();showHealToast('Session code: '+code+' — share it!');if(navigator.clipboard)navigator.clipboard.writeText(code).catch(function(){});goWiz();}
@@ -1361,7 +1370,7 @@ async function _speakHume(text){
   var description=HUME_PROMPTS[genre]+toneNote+(author?' Narrating a '+author+' novel.':'');
   var res=await fetch('/api/voice',{
     method:'POST',
-    headers:{'Content-Type':'application/json'},
+    headers:{'Content-Type':'application/json','x-nexus-token':'nx_83c8a0f2fea04883418d0da02d49eef0'},
     body:JSON.stringify({provider:'hume',text:text,genre:description})
   });
   if(!res.ok){VOICE.speaking=false;throw new Error('Hume '+res.status);}
@@ -1379,7 +1388,7 @@ async function _speakEleven(text,voiceIdOverride){
   var vid=voiceIdOverride||ELEVEN_VOICES[genre]||'onwK4e9ZLuTAKqWW03F9';
   var res=await fetch('/api/voice',{
     method:'POST',
-    headers:{'Content-Type':'application/json'},
+    headers:{'Content-Type':'application/json','x-nexus-token':'nx_83c8a0f2fea04883418d0da02d49eef0'},
     body:JSON.stringify({provider:'elevenlabs',text:text,voiceId:vid})
   });
   if(!res.ok){VOICE.speaking=false;throw new Error('ElevenLabs '+res.status);}
@@ -1652,7 +1661,7 @@ function doLogin(){
 }
 
 function guest(){loginU({email:'__guest__',name:'Guest',guest:true});}
-function loginU(u){CU=u;if(!u.guest){localStorage.setItem('nx_ses',JSON.stringify(u));touchStreak();}showPage('dash-page');rdash();}
+function loginU(u){CU=u;if(!u.guest){u.loginTime=Date.now();localStorage.setItem('nx_ses',JSON.stringify(u));touchStreak();}showPage('dash-page');rdash();}
 function doLogout(){CU=null;localStorage.removeItem('nx_ses');showPage('auth-page');showBottomNav(false);}
 function confirmGoHome(){
   // If not logged in, just go home
@@ -1736,6 +1745,17 @@ function mkCard(s,i,ended){var cc=GC[s.genre]||'#a064f0';var maxCh=(s.settings&&
 
 function cap(s){return s?s[0].toUpperCase()+s.slice(1):'';}
 function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function sanitizeInput(s){
+  /* Strip script tags, event handlers, and dangerous protocols */
+  if(!s)return'';
+  return String(s)
+    .replace(/<script[\s\S]*?<\/script>/gi,'')
+    .replace(/javascript\s*:/gi,'')
+    .replace(/on\w+\s*=/gi,'')
+    .replace(/[<>]/g,'')
+    .trim()
+    .slice(0,200);
+}
 function delStory(i){if(!CU||CU.guest)return;var a=gstories(CU.email);a.splice(i,1);sstories(CU.email,a);rdash();}
 
 function saveGame(ended){if(!CU||CU.guest)return;if(ended&&G.choiceLog&&G.choiceLog.length)updateFingerprint(G.choiceLog);var a=gstories(CU.email);var snap={genre:G.genre,seed:G.seed,title:G.title,chapter:G.chapter,choicesMade:G.choicesMade,choiceLog:G.choiceLog,messages:G.messages,settings:G.settings,len:G.settings.len,tone:G.settings.tone,startedAt:G.startedAt,savedAt:Date.now(),ended:ended||false};var idx=a.findIndex(function(s){return s.startedAt===G.startedAt;});if(idx>=0)a[idx]=snap;else a.push(snap);sstories(CU.email,a);if(!ended)showToast('✓ Progress saved');}
@@ -1874,7 +1894,7 @@ function fetchBeat(chosenText,isResume,retryCount){
   else if(!chosenText)userMsg='Chapter 1. Begin the story immediately — drop the reader into an active scene. Something is already happening right now.';
   else userMsg='The player chose: "'+chosenText+'"\nWrite Chapter '+G.chapter+'. First sentence MUST directly show the consequence of that choice.';
   G.messages.push({role:'user',content:userMsg});
-  var msgs=G.messages.length>12?[G.messages[0],G.messages[1]].concat(G.messages.slice(-8)):G.messages.slice();
+  var msgs=G.messages.length>16?[G.messages[0],G.messages[1]].concat(G.messages.slice(-10)):G.messages.slice();/* trim to prevent token bloat */
   callClaude(msgs,buildSysPrompt(),700)
     .then(function(raw){
       if(!raw){
@@ -2205,6 +2225,8 @@ function getWorldMemoryBlock() {
 
 function extractWorldFacts(paragraph, chosenText) {
   if (!paragraph || G.chapter < 2) return;
+  /* Only extract every 2 chapters to reduce API calls */
+  if (G.chapter % 2 !== 0) return;
   var sys = 'You extract world-state facts from story text. Given this story paragraph and the choice that led to it, extract 1-3 short factual statements about what is now true in this story world (character states, location changes, relationship shifts, knowledge gained). Return ONLY a JSON array of strings, no markdown. Example: ["The hero now knows the mayor is corrupt","Aria trusts the protagonist","They are hiding in the old mill"]';
   var userMsg = 'Choice: "' + chosenText + '"\nParagraph: "' + paragraph.slice(0, 400) + '"';
   callClaude([{role:'user', content: userMsg}], sys, 150)
@@ -2316,9 +2338,9 @@ function getRealPersonBlock() {
 }
 
 function loadRealPersonFromWizard() {
-  REAL_PERSON.name   = (document.getElementById('rpName')  || {}).value || '';
-  REAL_PERSON.city   = (document.getElementById('rpCity')  || {}).value || '';
-  REAL_PERSON.detail = (document.getElementById('rpDetail')|| {}).value || '';
+  REAL_PERSON.name   = sanitizeInput((document.getElementById('rpName')  || {}).value || '');
+  REAL_PERSON.city   = sanitizeInput((document.getElementById('rpCity')  || {}).value || '');
+  REAL_PERSON.detail = sanitizeInput((document.getElementById('rpDetail')|| {}).value || '');
 }
 
 /* ════════════════════════════════════════════════════
@@ -2817,6 +2839,15 @@ window.addEventListener('unhandledrejection', function(ev){
   });
 
   console.log('[NEXUS] Self-check complete. Storage OK.');
+
+/* Auto-backup on page unload — never lose a story */
+window.addEventListener('beforeunload', function(){
+  if(typeof CU !== 'undefined' && CU && !CU.guest &&
+     typeof G !== 'undefined' && G.chapter > 1 &&
+     typeof saveGame === 'function'){
+    try{ saveGame(false); }catch(e){}
+  }
+});
 })();
 
 /* ── NAV HELPERS (Tell Tale bottom nav) ── */
@@ -2853,7 +2884,20 @@ showPage=function(id){
 
 /* ── INIT ── */
 (function(){
-  try{var s=JSON.parse(localStorage.getItem('nx_ses')||'null');if(s&&s.email){CU=s;showPage('dash-page');rdash();return;}}catch(e){}
+  try{
+    var s=JSON.parse(localStorage.getItem('nx_ses')||'null');
+    if(s&&s.email){
+      /* Auto-expire sessions older than 30 days */
+      var SESSION_MAX = 30 * 24 * 60 * 60 * 1000;
+      var sessionAge = Date.now() - (s.loginTime || 0);
+      if(s.loginTime && sessionAge > SESSION_MAX){
+        localStorage.removeItem('nx_ses');
+        showPage('auth-page');
+        return;
+      }
+      CU=s;showPage('dash-page');rdash();return;
+    }
+  }catch(e){}
   showPage('auth-page');
   document.addEventListener('keydown',function(e){if(e.key!=='Enter')return;var ap=document.getElementById('auth-page');if(ap&&ap.classList.contains('on')){if(document.getElementById('fIn').style.display!=='none')doLogin();else doSignup();}});
 })();
