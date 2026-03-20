@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0d0e14">
+<meta name="theme-color" content="#0a0a0c">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="NEXUS">
@@ -11,23 +11,23 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&display=swap" rel="stylesheet">
 <style>
 :root {
-  --void:#0a0804;--deep:#111008;--surface:#1a1710;--surface2:#231f14;--surface3:#2e2a1c;--surface4:#3d3826;
-  --ochre:#c8891a;--ochre2:#e09c20;--ochre-dim:rgba(200,137,26,.12);--ochre-glow:rgba(200,137,26,.06);
-  --sand:#d4b483;--sand2:#e8d0a8;--terra:#a05030;--terra2:#c46040;
-  --ink:#f0e8d8;--ink2:#c8bca8;--ink3:#8a7e6c;--ink4:#564e3c;--ink5:#302c20;
-  --ok:#5a9a4a;--err:#c04030;--warn:#c8891a;
+  --void:#0a0a0c;--deep:#111114;--surface:#18181d;--surface2:#202028;--surface3:#2a2a35;--surface4:#35353f;
+  --ochre:#a0a8b8;--ochre2:#c0c8d8;--ochre-dim:rgba(160,168,184,.1);--ochre-glow:rgba(160,168,184,.05);
+  --sand:#8a9aaa;--sand2:#b0bfcc;--terra:#6070a0;--terra2:#8090b8;
+  --ink:#e8eaf0;--ink2:#b0b8c8;--ink3:#6a7280;--ink4:#3a3f4a;--ink5:#22252e;
+  --ok:#4a9a5a;--err:#c04040;--warn:#a0a8b8;
   --font-display:'Cormorant Garamond',Georgia,serif;
   --font-mono:'Space Mono',monospace;
   --font-title:'Bebas Neue','Impact',sans-serif;
   --font-sans:'Space Mono',monospace;
   --r-xs:3px;--r-sm:6px;--r-md:10px;--r-lg:14px;--r-xl:20px;--r-pill:100px;
-  --border:rgba(200,137,26,.12);--border2:rgba(200,137,26,.22);--border3:rgba(200,137,26,.38);
+  --border:rgba(160,168,184,.12);--border2:rgba(160,168,184,.22);--border3:rgba(160,168,184,.38);
   --safe-bottom:env(safe-area-inset-bottom,0px);
   --black:var(--void);--black2:var(--deep);--black3:var(--surface);--black4:var(--surface2);--black5:var(--surface3);--black6:var(--surface4);
   --white:var(--ink);--white2:var(--ink2);--white3:var(--ink3);--white4:var(--ink4);
   --gold:var(--ochre);--gold2:var(--ochre2);
   --p1:var(--ochre);--p2:var(--ochre2);--p-muted:var(--ochre-dim);--p-glow:var(--ochre-glow);
-  --s1:var(--terra);--s2:var(--terra2);--s-muted:rgba(160,80,48,.1);
+  --s1:var(--terra);--s2:var(--terra2);--s-muted:rgba(96,112,160,.1);
   --teal:#4a9a70;--teal-muted:rgba(74,154,112,.1);
   --accent:var(--ochre);--accent2:var(--ochre2);--accent-dim:var(--ochre-dim);--accent-border:var(--border2);
   --a1:var(--ochre);--a2:var(--terra);--g2:var(--sand);
@@ -35,7 +35,7 @@
   --bg:var(--void);--panel:var(--deep);--card-s:var(--surface);--border-s:var(--border);--b2:var(--border2);
   --r-card:var(--r-lg);--cc:var(--ochre);
 }
-body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.038;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");background-size:200px;mix-blend-mode:overlay;}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.038;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");background-size:200px;mix-blend-mode:soft-light;}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 html{scroll-behavior:smooth;-webkit-tap-highlight-color:transparent;}
 body{background:var(--void);color:var(--ink);font-family:var(--font-mono);font-size:14px;line-height:1.7;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;padding-bottom:calc(72px + var(--safe-bottom));}
@@ -43,7 +43,7 @@ body{background:var(--void);color:var(--ink);font-family:var(--font-mono);font-s
 .page{display:none;min-height:100vh;flex-direction:column;}
 .page.on{display:flex;animation:groundUp .6s cubic-bezier(.16,1,.3,1);}
 @keyframes groundUp{from{opacity:0;transform:translateY(28px);}to{opacity:1;transform:translateY(0);}}
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;height:calc(68px + var(--safe-bottom));padding-bottom:var(--safe-bottom);background:rgba(10,8,4,.94);backdrop-filter:blur(16px);border-top:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-around;padding-top:12px;}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;height:calc(68px + var(--safe-bottom));padding-bottom:var(--safe-bottom);background:rgba(10,10,14,.96);backdrop-filter:blur(16px);border-top:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-around;padding-top:12px;}
 .bottom-nav.hidden{display:none;}
 .nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;color:var(--ink4);transition:color .2s;padding:2px 24px;font-family:var(--font-mono);}
 .nav-item:active{transform:scale(.9);}
@@ -83,7 +83,7 @@ select.inp{background:var(--surface);padding:13px 12px;border:1px solid var(--bo
 #auth-page{justify-content:flex-end;padding-bottom:0;background:var(--void);}
 .auth-wrap{width:100%;display:flex;flex-direction:column;flex:1;min-height:100vh;}
 .auth-hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 28px 32px;text-align:center;position:relative;overflow:hidden;}
-.auth-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 40% at 50% 60%,rgba(200,137,26,.06) 0%,transparent 70%);}
+.auth-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 40% at 50% 60%,rgba(160,168,184,.05) 0%,transparent 70%);}
 .auth-card{background:var(--deep);border-top:1px solid var(--border2);padding:28px 24px calc(40px + var(--safe-bottom));}
 .auth-tabs{display:flex;gap:0;margin-bottom:24px;border-bottom:1px solid var(--border);}
 .atab{flex:1;padding:12px;background:transparent;border:none;color:var(--ink4);font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;}
@@ -103,7 +103,7 @@ select.inp{background:var(--surface);padding:13px 12px;border:1px solid var(--bo
 .verify-sub{font-size:12px;font-family:var(--font-mono);color:var(--ink3);margin-bottom:22px;line-height:1.7;}
 
 /* TOPBAR */
-.topbar,.game-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;background:rgba(10,8,4,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;gap:10px;flex-wrap:wrap;}
+.topbar,.game-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;background:rgba(10,10,14,.94);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;gap:10px;flex-wrap:wrap;}
 .topbar-logo,.gn-logo{font-family:var(--font-title);font-size:24px;letter-spacing:.08em;color:var(--ink);transition:opacity .18s;}
 .topbar-logo:hover,.gn-logo:hover{opacity:.55;}
 .user-chip{display:flex;align-items:center;gap:7px;border:1px solid var(--border);padding:5px 14px;font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--ink3);text-transform:uppercase;}
@@ -265,8 +265,8 @@ select.inp{background:var(--surface);padding:13px 12px;border:1px solid var(--bo
 .btitle{font-family:var(--font-display);font-size:22px;font-weight:600;color:var(--ink);letter-spacing:-.01em;font-style:italic;}
 .moodchip{font-family:var(--font-mono);font-size:8px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border:1px solid var(--border);color:var(--ink4);}
 .echo{font-family:var(--font-display);font-size:15px;font-style:italic;color:var(--ink3);padding:10px 0 10px 18px;margin:6px 0 14px;border-left:1px solid var(--ochre);}
-.spara{font-family:var(--font-display);font-size:clamp(21px,2.8vw,28px);line-height:1.85;color:var(--ink2);padding:6px 0 18px;cursor:pointer;letter-spacing:-.01em;font-weight:300;}
-.spara::first-letter{font-family:var(--font-title);font-size:4.5em;line-height:.75;float:left;margin:8px 10px 0 0;color:var(--ochre);letter-spacing:.02em;}
+.spara{font-family:var(--font-display);font-size:clamp(21px,2.8vw,28px);line-height:1.85;color:var(--ink);padding:6px 0 18px;cursor:pointer;letter-spacing:-.01em;font-weight:300;}
+.spara::first-letter{font-family:var(--font-title);font-size:4.5em;line-height:.75;float:left;margin:8px 10px 0 0;color:#8898b8;letter-spacing:.02em;}
 
 /* ═══════════════════════════════════════════════════
    MAKEMEPULSE SCENE ILLUSTRATION PANELS
@@ -279,18 +279,21 @@ select.inp{background:var(--surface);padding:13px 12px;border:1px solid var(--bo
    - Foreground vignette pushed lower
    - Silhouettes have visible warm edges
 ═══════════════════════════════════════════════════ */
-.nx-scene-panel{width:calc(100% + 56px);margin-left:-28px;margin-right:-28px;aspect-ratio:16/9;position:relative;overflow:hidden;background:#f0e8d0;cursor:zoom-in;border:2px solid #2a1e08;margin-top:4px;margin-bottom:4px;}
+.nx-scene-panel{width:calc(100% + 56px);margin-left:-28px;margin-right:-28px;aspect-ratio:16/9;position:relative;overflow:hidden;background:#0a0c14;cursor:zoom-in;border:1px solid rgba(160,168,184,.15);margin-top:6px;margin-bottom:6px;}
 @media(max-width:600px){.nx-scene-panel{width:calc(100% + 40px);margin-left:-20px;margin-right:-20px;}}
-.nx-scene-panel canvas{width:100%;height:100%;display:block;}
-.nx-scene-panel:hover canvas{opacity:.92;transition:opacity .3s;}
-.nx-scene-caption{position:absolute;bottom:0;left:0;right:0;padding:32px 12px 10px;background:linear-gradient(to top,rgba(240,232,208,.88) 0%,transparent 100%);display:flex;align-items:flex-end;justify-content:space-between;opacity:0;transition:opacity .3s;pointer-events:none;}
+.nx-scene-panel canvas{position:absolute;inset:0;width:100%;height:100%;}
+.nx-scene-panel img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .9s ease;}
+
+.nx-scene-caption{position:absolute;bottom:0;left:0;right:0;padding:32px 12px 10px;background:linear-gradient(to top,rgba(14,16,24,.88) 0%,transparent 100%);display:flex;align-items:flex-end;justify-content:space-between;opacity:0;transition:opacity .3s;pointer-events:none;}
 .nx-scene-panel:hover .nx-scene-caption{opacity:1;}
-.nx-scene-label{font-family:var(--font-mono);font-size:8px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(42,30,8,.55);}
-.nx-scene-mood-tag{font-family:var(--font-mono);font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(42,30,8,.8);border:1px solid rgba(42,30,8,.3);padding:2px 8px;background:rgba(240,232,208,.75);}
-.nx-scene-shimmer{position:absolute;inset:0;background:linear-gradient(90deg,#f0e8d0 0%,#e8dcc0 40%,#f4ecd8 50%,#e8dcc0 60%,#f0e8d0 100%);background-size:200% 100%;animation:nxShimmer 1.8s ease-in-out infinite;}
+.nx-scene-label{font-family:var(--font-mono);font-size:8px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(140,150,170,.55);}
+.nx-scene-mood-tag{font-family:var(--font-mono);font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(200,210,230,.85);border:1px solid rgba(160,168,184,.3);padding:2px 8px;background:rgba(20,24,36,.75);}
+.nx-scene-shimmer{position:absolute;inset:0;background:linear-gradient(90deg,#14161e 0%,#1e2030 40%,#22263a 50%,#1e2030 60%,#14161e 100%);background-size:200% 100%;animation:nxShimmer 1.8s ease-in-out infinite;}
 @keyframes nxShimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
-.nx-scene-expanded{position:fixed!important;inset:0!important;z-index:500!important;width:100vw!important;height:100vh!important;aspect-ratio:unset!important;background:#f0e8d0!important;cursor:zoom-out!important;margin:0!important;border:none!important;}
+@keyframes nxPulse{0%,100%{opacity:.4;transform:scale(1);}50%{opacity:1;transform:scale(1.3);}}
+.nx-scene-expanded{position:fixed!important;inset:0!important;z-index:500!important;width:100vw!important;height:100vh!important;aspect-ratio:unset!important;background:#0a0c14!important;cursor:zoom-out!important;margin:0!important;border:none!important;}
 .nx-scene-expanded canvas{width:100%!important;height:100%!important;object-fit:contain!important;}
+.nx-scene-expanded img{object-fit:contain!important;width:100%!important;height:100%!important;}
 .nx-scene-expanded .nx-scene-caption{opacity:1;}
 
 /* CHOICES */
@@ -698,7 +701,7 @@ select.inp{background:var(--surface);padding:13px 12px;border:1px solid var(--bo
   </div>
 </div>
 <div id="chprogbar" style="height:2px;background:var(--border-s);position:sticky;top:46px;z-index:49;">
-  <div id="chprogfill" style="height:100%;background:var(--ochre);width:0%;transition:width .6s ease;"></div>
+  <div id="chprogfill" style="height:100%;background:var(--ochre2);width:0%;transition:width .6s ease;"></div>
 </div>
 <div id="autosave-toast">✓ Saved</div>
 <div class="game-layout">
@@ -963,7 +966,7 @@ function rdash(){
 }
 
 function getGenreCoverGradient(g){var m={'romance':'linear-gradient(135deg,#1e0d28,#2a1438)','thriller':'linear-gradient(135deg,#160a20,#200f2c)','mystery':'linear-gradient(135deg,#0e0c22,#161430)','isekai':'linear-gradient(135deg,#180e30,#221440)','horror':'linear-gradient(135deg,#1a0818,#280c22)','scifi':'linear-gradient(135deg,#0c0e24,#141630)','fantasy':'linear-gradient(135deg,#14102a,#1e1838)','noir':'linear-gradient(135deg,#100c1c,#18142a)','survival':'linear-gradient(135deg,#0e1020,#16182e)','supernatural':'linear-gradient(135deg,#160c28,#221438)','historical':'linear-gradient(135deg,#1c1020,#281830)','random':'linear-gradient(135deg,#120e22,#1c1630)'};return m[g]||m.random;}
-function mkCard(s,i,ended){var cc=GC[s.genre]||'#a064f0';var maxCh=(s.settings&&s.settings.customCh)||25;var pct=Math.min(100,Math.round(((s.chapter||1)/maxCh)*100));var d=document.createElement('div');d.className='story-card';d.innerHTML='<div class="sc-cover"><div class="sc-cover-gradient" style="background:'+getGenreCoverGradient(s.genre)+';"></div><div class="sc-cover-icon">'+(GI[s.genre]||'✦')+'</div><div class="sc-cover-overlay"></div><div class="sc-cover-genre">'+s.genre.toUpperCase()+'</div><div class="sc-cover-status" style="background:'+(ended?'rgba(93,232,160,.15)':'rgba(200,137,26,.1)')+';color:'+(ended?'#4ade80':'var(--ochre)')+';border:1px solid '+(ended?'rgba(93,232,160,.3)':'rgba(200,137,26,.3)')+'">'+(ended?'DONE':'IN PROGRESS')+'</div></div><div class="sc-body"><div class="sc-genre">'+(GI[s.genre]||'✦')+' '+s.genre.toUpperCase()+'</div><div class="sc-title">'+(s.title||cap(s.genre)+' Story')+'</div><div class="sc-seed"><em>'+(s.seed||'')+'</em></div><div class="sc-chips"><span class="chip">Ch. '+(s.chapter||1)+'</span><span class="chip">'+(s.choicesMade||0)+' choices</span>'+(s.tone?'<span class="chip">'+s.tone+'</span>':'')+'</div>'+(ended?'':'<div class="prog"><div class="prog-fill" style="width:'+pct+'%"></div></div>')+'</div><div class="sc-foot"><span class="sc-date">'+new Date(s.savedAt||s.startedAt||Date.now()).toLocaleDateString()+'</span><div class="sc-acts">'+(ended?'':'<button class="btn btn-out btn-sm" onclick="resumeStory('+i+');event.stopPropagation()">Resume</button>')+'<button class="delbtn" onclick="delStory('+i+');event.stopPropagation()">Delete</button></div></div>';if(!ended)d.addEventListener('click',function(){resumeStory(i);});return d;}
+function mkCard(s,i,ended){var cc=GC[s.genre]||'#a064f0';var maxCh=(s.settings&&s.settings.customCh)||25;var pct=Math.min(100,Math.round(((s.chapter||1)/maxCh)*100));var d=document.createElement('div');d.className='story-card';d.innerHTML='<div class="sc-cover"><div class="sc-cover-gradient" style="background:'+getGenreCoverGradient(s.genre)+';"></div><div class="sc-cover-icon">'+(GI[s.genre]||'✦')+'</div><div class="sc-cover-overlay"></div><div class="sc-cover-genre">'+s.genre.toUpperCase()+'</div><div class="sc-cover-status" style="background:'+(ended?'rgba(93,232,160,.15)':'rgba(160,168,184,.1)')+';color:'+(ended?'#4ade80':'var(--ochre)')+';border:1px solid '+(ended?'rgba(93,232,160,.3)':'rgba(160,168,184,.3)')+'">'+(ended?'DONE':'IN PROGRESS')+'</div></div><div class="sc-body"><div class="sc-genre">'+(GI[s.genre]||'✦')+' '+s.genre.toUpperCase()+'</div><div class="sc-title">'+(s.title||cap(s.genre)+' Story')+'</div><div class="sc-seed"><em>'+(s.seed||'')+'</em></div><div class="sc-chips"><span class="chip">Ch. '+(s.chapter||1)+'</span><span class="chip">'+(s.choicesMade||0)+' choices</span>'+(s.tone?'<span class="chip">'+s.tone+'</span>':'')+'</div>'+(ended?'':'<div class="prog"><div class="prog-fill" style="width:'+pct+'%"></div></div>')+'</div><div class="sc-foot"><span class="sc-date">'+new Date(s.savedAt||s.startedAt||Date.now()).toLocaleDateString()+'</span><div class="sc-acts">'+(ended?'':'<button class="btn btn-out btn-sm" onclick="resumeStory('+i+');event.stopPropagation()">Resume</button>')+'<button class="delbtn" onclick="delStory('+i+');event.stopPropagation()">Delete</button></div></div>';if(!ended)d.addEventListener('click',function(){resumeStory(i);});return d;}
 
 function cap(s){return s?s[0].toUpperCase()+s.slice(1):'';}
 function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -1039,7 +1042,7 @@ var TW_SPEED=14;
 function toggleSpeed(){var btn=document.getElementById('btnSpeed');if(TW_SPEED===14){TW_SPEED=4;btn.textContent='🐇 Turbo';}else if(TW_SPEED===4){TW_SPEED=0;btn.textContent='⏩ Instant';}else{TW_SPEED=14;btn.textContent='⚡ Fast';}}
 function updateProgress(){var s=G.settings,maxCh=s.customCh||25,pct=Math.min(100,Math.round((G.chapter/maxCh)*100));var fill=document.getElementById('chprogfill');if(fill)fill.style.width=pct+'%';document.getElementById('gnCh').textContent='CH '+G.chapter+' / '+maxCh;}
 function showToast(msg){var t=document.getElementById('autosave-toast');if(!t)return;t.textContent=msg;t.style.display='block';t.classList.remove('autosave-out');clearTimeout(t._timer);t._timer=setTimeout(function(){t.classList.add('autosave-out');setTimeout(function(){t.style.display='none';},400);},2200);}
-function setupGNav(){var cc=GC[G.genre]||'#c8891a';var b=document.getElementById('gnBadge');b.textContent=G.genre.toUpperCase();b.style.color=cc;b.style.borderColor=cc;var ab=document.getElementById('gnAuthor');if(ab){var auth=(G.settings&&G.settings.customAuthor)||(AUTHOR_DB[G.genre]&&AUTHOR_DB[G.genre].name)||'Author';ab.textContent='à la '+auth;ab.style.color=cc;}updateProgress();var sb=document.getElementById('btnSave');if(sb)sb.style.display=(CU&&!CU.guest)?'inline-flex':'none';}
+function setupGNav(){var cc=GC[G.genre]||'#a0a8b8';var b=document.getElementById('gnBadge');b.textContent=G.genre.toUpperCase();b.style.color=cc;b.style.borderColor=cc;var ab=document.getElementById('gnAuthor');if(ab){var auth=(G.settings&&G.settings.customAuthor)||(AUTHOR_DB[G.genre]&&AUTHOR_DB[G.genre].name)||'Author';ab.textContent='à la '+auth;ab.style.color=cc;}updateProgress();var sb=document.getElementById('btnSave');if(sb)sb.style.display=(CU&&!CU.guest)?'inline-flex':'none';}
 function leavegame(){stopSpeaking();if(CU&&!CU.guest&&G.chapter>1)saveGame(false);showPage('dash-page');rdash();setActiveNav('dash');}
 
 var CHOICE_TAGS={aggressive:['attack','fight','confront','challenge','demand','force','strike','kill','flee','run'],clever:['trick','deceive','lie','sneak','steal','investigate','analyze','negotiate','bribe','distract','plan','hide'],vulnerable:['trust','tell','confess','ask','help','forgive','accept','surrender','share','admit','open','reach','comfort','stay']};
@@ -1143,7 +1146,7 @@ function showEndStyleRating(){var author=(G.settings&&G.settings.customAuthor)||
 function rateStory(rating){_storyRating=rating;var FB={1:'Not quite the right voice',2:'Glimpses of the style',3:'Captured the feel in places',4:'Voice came through clearly',5:'Could have come straight from their books'};document.querySelectorAll('#endStarRow .star-btn').forEach(function(s){s.classList.toggle('lit',parseInt(s.dataset.n)<=rating);});var fb=document.getElementById('endRatingFeedback');if(fb)fb.textContent=FB[rating]||'Thanks!';}
 
 function buildStoryDNA(){var choices=G.choiceLog||[];if(!choices.length)return null;var counts={aggressive:0,clever:0,vulnerable:0};var emotions=[];choices.forEach(function(c,i){var tag=classifyChoice(c.text);counts[tag]++;var tension=tag==='aggressive'?0.8:tag==='vulnerable'?0.2:0.5;tension+=((i/choices.length)*0.15)+(Math.random()*0.1-0.05);emotions.push(Math.max(0,Math.min(1,tension)));});var dominant=Object.keys(counts).sort(function(a,b){return counts[b]-counts[a];})[0];var PERSONALITY={aggressive:{title:'The Bold Protagonist',desc:'You charge forward, making decisive moves.',color:'#f87171'},clever:{title:'The Cunning Strategist',desc:'You think three steps ahead.',color:'#38bdf8'},vulnerable:{title:'The Emotional Heart',desc:'You lead with empathy and connection.',color:'#f0538a'}};return{counts:counts,total:choices.length,dominant:dominant,emotions:emotions,personality:PERSONALITY[dominant]};}
-function renderDNACard(){var dna=buildStoryDNA();var card=document.getElementById('dnaCarda');if(!card)return;if(!dna){card.style.display='none';return;}card.style.display='block';var canvas=document.getElementById('dnaDonut');if(canvas){var ctx=canvas.getContext('2d');var total=dna.total;var slices=[{val:dna.counts.aggressive/total,color:'#f87171'},{val:dna.counts.clever/total,color:'#38bdf8'},{val:dna.counts.vulnerable/total,color:'#f0538a'}];ctx.clearRect(0,0,110,110);var cx=55,cy=55,r=45,ir=28,start=-Math.PI/2;slices.forEach(function(sl){if(!sl.val)return;var end=start+sl.val*2*Math.PI;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,start,end);ctx.closePath();ctx.fillStyle=sl.color;ctx.fill();start=end;});ctx.beginPath();ctx.arc(cx,cy,ir,0,2*Math.PI);ctx.fillStyle='#161822';ctx.fill();}var legend=document.getElementById('dnaLegend');if(legend){legend.innerHTML='';[{label:'Bold',color:'#f87171',count:dna.counts.aggressive},{label:'Clever',color:'#38bdf8',count:dna.counts.clever},{label:'Heart',color:'#f0538a',count:dna.counts.vulnerable}].forEach(function(item){var pct=Math.round((item.count/dna.total)*100);var el=document.createElement('div');el.className='dna-legend-item';el.innerHTML='<div class="dna-legend-dot" style="background:'+item.color+'"></div><span>'+item.label+'</span><span style="margin-left:auto;color:var(--ink)">'+pct+'%</span>';legend.appendChild(el);});}var svg=document.getElementById('emotionLineSvg');if(svg&&dna.emotions.length>1){var pts=dna.emotions,w=500,h=60;var points=pts.map(function(v,i){return[(i/(pts.length-1))*w,h-(v*h*0.85+h*0.08)];});var d='M '+points[0][0]+' '+points[0][1];for(var i=1;i<points.length;i++){var prev=points[i-1],curr=points[i],cpx=(prev[0]+curr[0])/2;d+=' C '+cpx+' '+prev[1]+' '+cpx+' '+curr[1]+' '+curr[0]+' '+curr[1];}svg.innerHTML='<defs><linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#c8891a"/><stop offset="100%" stop-color="#f0538a"/></linearGradient></defs><path d="'+d+'" fill="none" stroke="url(#lineGrad)" stroke-width="2.5" stroke-linecap="round"/>'+points.map(function(p){return'<circle cx="'+p[0]+'" cy="'+p[1]+'" r="3" fill="#c8891a" opacity="0.7"/>';}).join('');}var grid=document.getElementById('dnaGrid');if(grid){grid.innerHTML='';[{n:G.chapter,l:'Chapters',c:'var(--ochre2)'},{n:dna.total,l:'Choices',c:'var(--ochre)'},{n:dna.counts.aggressive,l:'Bold',c:'#f87171'},{n:dna.counts.clever,l:'Clever',c:'#38bdf8'},{n:dna.counts.vulnerable,l:'Heart',c:'#f0538a'},{n:_storyRating||'—',l:'Style',c:'var(--ochre)'}].forEach(function(s){var el=document.createElement('div');el.className='dna-stat';el.innerHTML='<span class="dna-stat-n" style="color:'+s.c+'">'+s.n+'</span><span class="dna-stat-l">'+s.l+'</span>';grid.appendChild(el);});}var tb=document.getElementById('dnaTraitBlock');if(tb&&dna.personality)tb.innerHTML='<div class="dna-trait" style="border-color:'+dna.personality.color+'30"><div class="dna-trait-title" style="color:'+dna.personality.color+'">'+dna.personality.title+'</div><div class="dna-trait-body">'+dna.personality.desc+'</div></div>';}
+function renderDNACard(){var dna=buildStoryDNA();var card=document.getElementById('dnaCarda');if(!card)return;if(!dna){card.style.display='none';return;}card.style.display='block';var canvas=document.getElementById('dnaDonut');if(canvas){var ctx=canvas.getContext('2d');var total=dna.total;var slices=[{val:dna.counts.aggressive/total,color:'#f87171'},{val:dna.counts.clever/total,color:'#38bdf8'},{val:dna.counts.vulnerable/total,color:'#f0538a'}];ctx.clearRect(0,0,110,110);var cx=55,cy=55,r=45,ir=28,start=-Math.PI/2;slices.forEach(function(sl){if(!sl.val)return;var end=start+sl.val*2*Math.PI;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,start,end);ctx.closePath();ctx.fillStyle=sl.color;ctx.fill();start=end;});ctx.beginPath();ctx.arc(cx,cy,ir,0,2*Math.PI);ctx.fillStyle='#161822';ctx.fill();}var legend=document.getElementById('dnaLegend');if(legend){legend.innerHTML='';[{label:'Bold',color:'#f87171',count:dna.counts.aggressive},{label:'Clever',color:'#38bdf8',count:dna.counts.clever},{label:'Heart',color:'#f0538a',count:dna.counts.vulnerable}].forEach(function(item){var pct=Math.round((item.count/dna.total)*100);var el=document.createElement('div');el.className='dna-legend-item';el.innerHTML='<div class="dna-legend-dot" style="background:'+item.color+'"></div><span>'+item.label+'</span><span style="margin-left:auto;color:var(--ink)">'+pct+'%</span>';legend.appendChild(el);});}var svg=document.getElementById('emotionLineSvg');if(svg&&dna.emotions.length>1){var pts=dna.emotions,w=500,h=60;var points=pts.map(function(v,i){return[(i/(pts.length-1))*w,h-(v*h*0.85+h*0.08)];});var d='M '+points[0][0]+' '+points[0][1];for(var i=1;i<points.length;i++){var prev=points[i-1],curr=points[i],cpx=(prev[0]+curr[0])/2;d+=' C '+cpx+' '+prev[1]+' '+cpx+' '+curr[1]+' '+curr[0]+' '+curr[1];}svg.innerHTML='<defs><linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#a0a8b8"/><stop offset="100%" stop-color="#f0538a"/></linearGradient></defs><path d="'+d+'" fill="none" stroke="url(#lineGrad)" stroke-width="2.5" stroke-linecap="round"/>'+points.map(function(p){return'<circle cx="'+p[0]+'" cy="'+p[1]+'" r="3" fill="#a0a8b8" opacity="0.7"/>';}).join('');}var grid=document.getElementById('dnaGrid');if(grid){grid.innerHTML='';[{n:G.chapter,l:'Chapters',c:'var(--ochre2)'},{n:dna.total,l:'Choices',c:'var(--ochre)'},{n:dna.counts.aggressive,l:'Bold',c:'#f87171'},{n:dna.counts.clever,l:'Clever',c:'#38bdf8'},{n:dna.counts.vulnerable,l:'Heart',c:'#f0538a'},{n:_storyRating||'—',l:'Style',c:'var(--ochre)'}].forEach(function(s){var el=document.createElement('div');el.className='dna-stat';el.innerHTML='<span class="dna-stat-n" style="color:'+s.c+'">'+s.n+'</span><span class="dna-stat-l">'+s.l+'</span>';grid.appendChild(el);});}var tb=document.getElementById('dnaTraitBlock');if(tb&&dna.personality)tb.innerHTML='<div class="dna-trait" style="border-color:'+dna.personality.color+'30"><div class="dna-trait-title" style="color:'+dna.personality.color+'">'+dna.personality.title+'</div><div class="dna-trait-body">'+dna.personality.desc+'</div></div>';}
 
 var ARCHETYPES=[{name:'The Architect',tagline:'You build the world before you conquer it.',req:function(fp){return fp.clever>fp.aggressive&&fp.clever>fp.vulnerable;}},{name:'The Protector',tagline:'You run toward the danger — but only for others.',req:function(fp){return fp.vulnerable>fp.clever&&fp.aggressive>0;}},{name:'The Wildfire',tagline:'Consequence is someone else\'s problem.',req:function(fp){return fp.aggressive>fp.clever&&fp.aggressive>fp.vulnerable;}},{name:'The Empath',tagline:'You feel the story more than you play it.',req:function(fp){return fp.vulnerable>fp.aggressive&&fp.vulnerable>fp.clever;}},{name:'The Shadowwalker',tagline:'You see three moves ahead and show none of them.',req:function(fp){return fp.clever>=fp.aggressive&&fp.clever>=fp.vulnerable;}},{name:'The Wanderer',tagline:'Every road is interesting. Every door opens.',req:function(){return true;}}];
 function getArchetype(fp){return ARCHETYPES.find(function(a){return a.req(fp);})||ARCHETYPES[ARCHETYPES.length-1];}
@@ -1154,7 +1157,7 @@ function renderIdentityCard(){var fp=getFingerprint();var card=document.getEleme
 
 function fetchParallelUniverses(){var section=document.getElementById('parallelSection');var grid=document.getElementById('parallelGrid');if(!section||!grid)return;section.style.display='block';var av=AUTHOR_DB[G.genre]||AUTHOR_DB.romance;var author=(G.settings&&G.settings.customAuthor)||av.name;var pivots=(G.choiceLog||[]).filter(function(_,i){return i%Math.max(1,Math.floor(G.choiceLog.length/3))===0;}).slice(0,3);if(!pivots.length){section.style.display='none';return;}var pivotText=pivots.map(function(p,i){return'Pivot '+(i+1)+': "'+p.text+'"';}).join(', ');var sys='Generate 3 alternate universe endings for "'+G.genre+'" fiction by '+author+'. Key choices: '+pivotText+'. Return ONLY raw JSON: [{"title":"2-4 words","diverge":"what changed (1 sentence)","text":"what happened instead (2-3 sentences)","color":"#a064f0|#d44fcc|#5de8a0"}]';callClaude([{role:'user',content:'Generate 3 parallel endings.'}],sys,400).then(function(raw){if(!raw){section.style.display='none';return;}try{var clean=raw.replace(/```[\w]*/g,'').replace(/```/g,'').trim();var universes=JSON.parse(clean);if(!Array.isArray(universes)||!universes.length){section.style.display='none';return;}grid.innerHTML='';universes.forEach(function(u){var card=document.createElement('div');card.className='parallel-card';card.style.setProperty('--pc',u.color||'#a064f0');card.innerHTML='<div class="parallel-card-label">'+escHtml(u.title||'')+'</div><div class="parallel-card-title">'+escHtml(u.title||'')+'</div><div class="parallel-card-text">'+escHtml(u.text||'')+'</div><div class="parallel-diverge">Diverged at: '+escHtml(u.diverge||'')+'</div>';grid.appendChild(card);});}catch(e){section.style.display='none';}}).catch(function(){section.style.display='none';});}
 
-function doEnding(data){var EC={TRAGIC:'#f06060',TRIUMPHANT:'#e8b84a',BITTERSWEET:'#c088ff',MYSTERIOUS:'#50c8e8',ROMANTIC:'#d44fcc',SHOCKING:'#e03060'},et=data.endingType||'BITTERSWEET',ec=EC[et]||'#c8891a';setTimeout(function(){document.getElementById('endBadge').textContent=et+' ENDING';document.getElementById('endBadge').style.color=ec;document.getElementById('endBadge').style.borderColor=ec;document.getElementById('endH').textContent=data.endingTitle||'The End';document.getElementById('endH').style.color=ec;document.getElementById('endBody').textContent=data.paragraph;document.getElementById('eCh').textContent=G.chapter;document.getElementById('eChoice').textContent=G.choicesMade;document.getElementById('eGenre').textContent=G.genre.toUpperCase();if(G.choiceLog&&G.choiceLog.length)updateFingerprint(G.choiceLog);renderDNACard();showEndStyleRating();renderIdentityCard();fetchParallelUniverses();showPage('end-page');},1300);}
+function doEnding(data){var EC={TRAGIC:'#f06060',TRIUMPHANT:'#e8b84a',BITTERSWEET:'#c088ff',MYSTERIOUS:'#50c8e8',ROMANTIC:'#d44fcc',SHOCKING:'#e03060'},et=data.endingType||'BITTERSWEET',ec=EC[et]||'#a0a8b8';setTimeout(function(){document.getElementById('endBadge').textContent=et+' ENDING';document.getElementById('endBadge').style.color=ec;document.getElementById('endBadge').style.borderColor=ec;document.getElementById('endH').textContent=data.endingTitle||'The End';document.getElementById('endH').style.color=ec;document.getElementById('endBody').textContent=data.paragraph;document.getElementById('eCh').textContent=G.chapter;document.getElementById('eChoice').textContent=G.choicesMade;document.getElementById('eGenre').textContent=G.genre.toUpperCase();if(G.choiceLog&&G.choiceLog.length)updateFingerprint(G.choiceLog);renderDNACard();showEndStyleRating();renderIdentityCard();fetchParallelUniverses();showPage('end-page');},1300);}
 function shareStory(){var text='I just finished a '+G.genre+' story on NEXUS — shaped entirely by my choices.';if(navigator.share){navigator.share({title:'My NEXUS Story',text:text}).catch(function(){});}else if(navigator.clipboard){navigator.clipboard.writeText(text).then(function(){showHealToast('📋 Copied!');}).catch(function(){});}}
 
 /* SUMMARY */
@@ -1188,6 +1191,7 @@ function beginStory(){
     initSummaryPanel();
     showPage('game-page');
     _prologueDone=false;_epilogueDone=false;
+    if(typeof startMusic==='function'){startMusic(G.genre);}
     fetchPrologue(function(){fetchBeat(null,false,0);});
   });
 }
@@ -1227,26 +1231,40 @@ showPage=function(id){_origShowPage(id);var noNav=['auth-page'];showBottomNav(no
 ════════════════════════════════════════════════════════════ */
 var _musicPlaying=false,_currentGenre='';
 var MUSIC={
+  thriller:'https://cdn.pixabay.com/audio/2022/11/22/audio_febc508520.mp3',
+  mystery:'https://cdn.pixabay.com/audio/2022/11/22/audio_febc508520.mp3',
+  horror:'https://cdn.pixabay.com/audio/2022/03/10/audio_c8c8a73467.mp3',
   fantasy:'https://cdn.pixabay.com/audio/2022/10/25/audio_946b8e9bf9.mp3',
   romance:'https://cdn.pixabay.com/audio/2023/06/28/audio_5a8eca7e9c.mp3',
-  thriller:'https://cdn.pixabay.com/audio/2022/11/22/audio_febc508520.mp3',
-  horror:'https://cdn.pixabay.com/audio/2022/03/10/audio_c8c8a73467.mp3',
   scifi:'https://cdn.pixabay.com/audio/2022/12/23/audio_b9c1d0c68a.mp3',
-  noir:'https://cdn.pixabay.com/audio/2023/04/06/audio_b15f67e7d4.mp3',
-  mystery:'https://cdn.pixabay.com/audio/2023/04/06/audio_b15f67e7d4.mp3',
-  supernatural:'https://cdn.pixabay.com/audio/2022/10/25/audio_946b8e9bf9.mp3',
+  noir:'https://cdn.pixabay.com/audio/2022/11/22/audio_febc508520.mp3',
+  supernatural:'https://cdn.pixabay.com/audio/2022/03/10/audio_c8c8a73467.mp3',
   historical:'https://cdn.pixabay.com/audio/2023/06/28/audio_5a8eca7e9c.mp3',
   isekai:'https://cdn.pixabay.com/audio/2022/10/25/audio_946b8e9bf9.mp3',
   survival:'https://cdn.pixabay.com/audio/2022/11/22/audio_febc508520.mp3',
   random:'https://cdn.pixabay.com/audio/2022/10/25/audio_946b8e9bf9.mp3'
 };
 function startMusic(genre){
-  if(typeof G!=='undefined'&&G.genre)genre=G.genre;
-  if(_musicPlaying&&genre===_currentGenre)return;
-  stopMusic();_currentGenre=genre||'fantasy';
-  var el=document.getElementById('bgMusic');if(!el)return;
-  el.src=MUSIC[_currentGenre]||MUSIC.fantasy;el.volume=0.18;el.loop=true;
-  el.play().catch(function(){document.addEventListener('click',function once(){el.play().catch(function(){});document.removeEventListener('click',once);},{once:true});});
+  var g=(typeof G!=='undefined'&&G.genre)?G.genre:(genre||'thriller');
+  if(_musicPlaying&&g===_currentGenre)return;
+  stopMusic();
+  _currentGenre=g;
+  var el=document.getElementById('bgMusic');
+  if(!el){el=document.createElement('audio');el.id='bgMusic';el.loop=true;el.style.display='none';document.body.appendChild(el);}
+  var url=MUSIC[_currentGenre]||MUSIC.thriller;
+  if(el.src===url&&_musicPlaying)return;
+  el.src=url;
+  el.volume=0.2;
+  el.loop=true;
+  var playPromise=el.play();
+  if(playPromise!==undefined){
+    playPromise.catch(function(){
+      // Autoplay blocked - wait for first user interaction
+      var resume=function(){el.play().catch(function(){});document.removeEventListener('click',resume);document.removeEventListener('keydown',resume);};
+      document.addEventListener('click',resume,{once:true});
+      document.addEventListener('keydown',resume,{once:true});
+    });
+  }
   _musicPlaying=true;
 }
 function stopMusic(){var el=document.getElementById('bgMusic');if(el){el.pause();el.src='';}  _musicPlaying=false;}
@@ -1255,7 +1273,7 @@ function fadeOutMusic(cb){
   var step=el.volume/20;var t=setInterval(function(){el.volume=Math.max(0,el.volume-step);if(el.volume<=0){clearInterval(t);stopMusic();if(cb)cb();}},80);
 }
 window.startMusic=startMusic;window.stopMusic=stopMusic;window.fadeOutMusic=fadeOutMusic;
-var _obs=window.beginStory;if(typeof _obs==='function'){window.beginStory=function(){_obs.apply(this,arguments);setTimeout(function(){startMusic(typeof G!=='undefined'?G.genre:'fantasy');},1200);};}
+var _obs=window.beginStory;if(typeof _obs==='function'){window.beginStory=function(){_obs.apply(this,arguments);var _mg=typeof G!=='undefined'&&G.genre?G.genre:'thriller';setTimeout(function(){startMusic(_mg);},400);};}
 var _olg=window.leavegame;if(typeof _olg==='function'){window.leavegame=function(){fadeOutMusic(function(){});_olg.apply(this,arguments);};}
 
 /* ════════════════════════════════════════════════════════════
@@ -2477,64 +2495,235 @@ function paint(canvas, sceneData, genre){
 }
 
 /* ════════════════════════════════════════════════════════════
-   PANEL DOM BUILDER
+   POLLINATIONS AI — Free FLUX illustration engine
+   https://image.pollinations.ai — no API key, no signup
+   Builds a detailed illustrated prompt from story paragraph
 ════════════════════════════════════════════════════════════ */
-function buildPanel(genre){
-  var panel=document.createElement('div');panel.className='nx-scene-panel';
-  var canvas=document.createElement('canvas');
-  var caption=document.createElement('div');caption.className='nx-scene-caption';
-  caption.innerHTML='<span class="nx-scene-label">NEXUS · '+(genre||'').toUpperCase()+'</span>';
-  var shimmer=document.createElement('div');shimmer.className='nx-scene-shimmer';
-  panel.appendChild(canvas);panel.appendChild(caption);panel.appendChild(shimmer);
-  panel.onclick=function(){
-    if(panel.classList.contains('nx-scene-expanded')){panel.classList.remove('nx-scene-expanded');document.body.style.overflow='';}
-    else{
-      panel.classList.add('nx-scene-expanded');document.body.style.overflow='hidden';
-      setTimeout(function(){
-        var vW=window.innerWidth,vH=Math.round(vW*9/16);
-        if(vH>window.innerHeight){vH=window.innerHeight;vW=Math.round(vH*16/9);}
-        canvas.width=vW;canvas.height=vH;
-        if(panel._sd)paint(canvas,panel._sd,panel._genre||genre);
-      },30);
-    }
-  };
-  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&panel.classList.contains('nx-scene-expanded')){panel.classList.remove('nx-scene-expanded');document.body.style.overflow='';}});
-  return{panel:panel,canvas:canvas,caption:caption,shimmer:shimmer};
+
+var STYLE_TAGS={
+  fantasy:  'fantasy illustration, painterly, detailed ink linework, Moebius style, soft colors',
+  romance:  'romantic illustration, warm soft light, painterly, storybook art, pastel tones',
+  thriller: 'noir thriller illustration, dramatic shadows, high contrast, moody atmosphere',
+  horror:   'dark horror illustration, gothic, eerie atmosphere, detailed linework, desaturated',
+  scifi:    'science fiction illustration, cyberpunk, neon lights, detailed technical art',
+  mystery:  'mystery illustration, dim atmospheric lighting, noir style, detailed shadows',
+  noir:     'noir illustration, 1940s style, high contrast black and white tones, dramatic shadows',
+  supernatural:'supernatural illustration, ethereal glow, mystic atmosphere, dark fantasy art',
+  historical:'historical illustration, painterly, period accurate, warm sepia tones, detailed',
+  isekai:   'isekai anime illustration, vibrant colors, detailed fantasy world, manga style',
+  survival: 'survival adventure illustration, gritty detailed realism, painterly, nature',
+  random:   'illustrated storybook art, detailed, painterly, cinematic lighting'
+};
+
+var ENV_TAGS={
+  living_room:'cozy living room interior',kitchen:'modern kitchen interior',
+  bedroom:'bedroom interior, soft lighting',cafe:'warm cafe interior, wooden tables',
+  hospital:'hospital corridor, fluorescent lights',airport:'airport terminal, large windows',
+  office:'office interior, desk and chairs',library:'library interior, tall bookshelves',
+  bar:'dimly lit bar interior, bottles, neon signs',restaurant:'elegant restaurant interior, candles',
+  courtroom:'courtroom interior, wooden benches',church:'cathedral interior, stained glass',
+  forest:'dense atmospheric forest, dappled light',castle:'medieval castle exterior, stone walls',
+  city:'city street at night, neon lights, rain',coast:'dramatic coastal cliffs, ocean waves',
+  mountain:'mountain landscape, dramatic sky',desert:'vast desert landscape, sand dunes',
+  cave:'cave interior, glowing crystals',ruins:'ancient ruins, overgrown stone'
+};
+
+var MOOD_TAGS={
+  longing:'melancholy and longing mood',tension:'tense atmospheric mood',
+  dread:'dread and suspense mood',grief:'sorrowful emotional mood',
+  hope:'hopeful warm light mood',warmth:'warm intimate mood',
+  wonder:'wonder and awe mood',anger:'intense dramatic mood',
+  despair:'dark despair mood',love:'tender romantic mood'
+};
+
+function buildIllustrationPrompt(paragraph,genre,sd){
+  var g=genre||'fantasy';
+  var env=sd&&sd.env||'living_room';
+  var mood=sd&&sd.mood||'tension';
+  var holding=sd&&sd.holding||'none';
+  var pose=sd&&sd.pose||'standing';
+  var weather=sd&&sd.weather||'clear';
+  var twoChars=sd&&sd.twoChars;
+
+  // Core scene description from paragraph (first ~80 chars, cleaned)
+  var sceneHint=paragraph.replace(/["""'']/g,'').replace(/\s+/g,' ').slice(0,90).trim();
+
+  // Build prompt parts
+  var parts=[];
+
+  // 1. Scene context from actual story text
+  parts.push(sceneHint);
+
+  // 2. Environment
+  var envTag=ENV_TAGS[env]||'interior scene';
+  parts.push(envTag);
+
+  // 3. Characters
+  if(twoChars){
+    parts.push('two characters, '+pose+' pose');
+  } else {
+    var charDesc='one character, '+pose+' pose';
+    if(holding!=='none')charDesc+=', holding a '+holding;
+    parts.push(charDesc);
+  }
+
+  // 4. Weather overlay
+  if(weather==='rain')parts.push('raining, wet atmosphere');
+  else if(weather==='snow')parts.push('snowfall, winter atmosphere');
+  else if(weather==='fog')parts.push('misty foggy atmosphere');
+
+  // 5. Mood
+  var moodTag=MOOD_TAGS[mood]||'atmospheric mood';
+  parts.push(moodTag);
+
+  // 6. Style — genre-specific illustration style
+  var styleTag=STYLE_TAGS[g]||STYLE_TAGS.fantasy;
+  parts.push(styleTag);
+
+  // 7. Quality tags
+  parts.push('cinematic composition, high quality, detailed, 16:9 aspect ratio');
+
+  // 8. Negative concepts baked into prompt phrasing (Pollinations supports this)
+  var prompt=parts.join(', ');
+
+  return prompt;
+}
+
+function buildPollinationsUrl(prompt,width,height){
+  var encoded=encodeURIComponent(prompt);
+  // Use flux model, no watermark (nologo), safe content
+  return 'https://image.pollinations.ai/prompt/'+encoded
+    +'?width='+(width||832)
+    +'&height='+(height||468)
+    +'&model=flux'
+    +'&nologo=true'
+    +'&seed='+Math.floor(Math.random()*999999);
 }
 
 /* ════════════════════════════════════════════════════════════
-   RENDER SCENE — called after each paragraph
+   PANEL DOM BUILDER — shows AI image with canvas fallback
+════════════════════════════════════════════════════════════ */
+function buildPanel(genre){
+  var panel=document.createElement('div');
+  panel.className='nx-scene-panel';
+  panel.style.cssText='position:relative;overflow:hidden;background:#0a0c14;';
+
+  // Canvas for instant fallback illustration
+  var canvas=document.createElement('canvas');
+  canvas.style.cssText='position:absolute;inset:0;width:100%;height:100%;';
+
+  // AI image element (sits on top once loaded)
+  var img=document.createElement('img');
+  img.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .8s ease;';
+  img.alt='Story illustration';
+
+  // Caption bar
+  var caption=document.createElement('div');
+  caption.className='nx-scene-caption';
+  caption.innerHTML='<span class="nx-scene-label">NEXUS · '+(genre||'').toUpperCase()+'</span>';
+
+  // Shimmer loading overlay
+  var shimmer=document.createElement('div');
+  shimmer.className='nx-scene-shimmer';
+
+  // Loading indicator
+  var loadingDot=document.createElement('div');
+  loadingDot.style.cssText='position:absolute;bottom:10px;right:10px;width:8px;height:8px;border-radius:50%;background:rgba(160,168,184,.5);animation:nxPulse 1.2s ease-in-out infinite;z-index:5;';
+
+  panel.appendChild(canvas);
+  panel.appendChild(img);
+  panel.appendChild(shimmer);
+  panel.appendChild(caption);
+  panel.appendChild(loadingDot);
+
+  // Expand on click
+  panel.onclick=function(){
+    if(panel.classList.contains('nx-scene-expanded')){
+      panel.classList.remove('nx-scene-expanded');
+      document.body.style.overflow='';
+    } else {
+      panel.classList.add('nx-scene-expanded');
+      document.body.style.overflow='hidden';
+    }
+  };
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'&&panel.classList.contains('nx-scene-expanded')){
+      panel.classList.remove('nx-scene-expanded');
+      document.body.style.overflow='';
+    }
+  });
+
+  return{panel:panel,canvas:canvas,img:img,caption:caption,shimmer:shimmer,loadingDot:loadingDot};
+}
+
+/* ════════════════════════════════════════════════════════════
+   RENDER SCENE — Pollinations AI + canvas fallback
 ════════════════════════════════════════════════════════════ */
 async function renderScene(paragraph,genre,tone,insertAfterEl){
   if(!paragraph||!insertAfterEl)return;
-  var _bp=buildPanel(genre||'fantasy');var panel=_bp.panel,canvas=_bp.canvas,caption=_bp.caption,shimmer=_bp.shimmer;
+
+  var _bp=buildPanel(genre||'fantasy');
+  var panel=_bp.panel,canvas=_bp.canvas,img=_bp.img,
+      caption=_bp.caption,shimmer=_bp.shimmer,loadingDot=_bp.loadingDot;
+
   if(insertAfterEl.nextSibling)insertAfterEl.parentNode.insertBefore(panel,insertAfterEl.nextSibling);
   else insertAfterEl.parentNode.appendChild(panel);
+
   await new Promise(function(r){requestAnimationFrame(r);});
-  var W=Math.floor(panel.offsetWidth)||680,H=Math.floor(W*9/16);
+
+  var W=Math.floor(panel.offsetWidth)||680;
+  var H=Math.floor(W*9/16);
   canvas.width=W;canvas.height=H;
-  // Paint immediately with keyword data (fast, synchronous)
+
+  // 1. INSTANT: Paint canvas fallback using keyword detection (synchronous, <1ms)
   var kwData=keywordDetect(paragraph,genre||'fantasy');
   var quickSd={env:kwData.env,props:kwData.props,holding:kwData.holding,pose:kwData.pose,
                mood:kwData.mood,weather:'clear',twoChars:kwData.twoChars,timeOfDay:kwData.timeOfDay};
   paint(canvas,quickSd,genre||'fantasy');
-  shimmer.style.transition='opacity .6s';shimmer.style.opacity='0';
-  setTimeout(function(){shimmer.remove();},650);
-  // Then refine with Claude extraction (replaces if meaningfully different)
+
+  // Fade out shimmer
+  shimmer.style.transition='opacity .5s';shimmer.style.opacity='0';
+  setTimeout(function(){if(shimmer.parentNode)shimmer.remove();},550);
+
+  // 2. ASYNC: Extract scene with Claude, build prompt, fetch Pollinations image
   extractScene(paragraph,genre||'fantasy',tone||'balanced').then(function(sd){
-    if(!sd)return;
-    var changed=sd.env!==kwData.env||sd.holding!==kwData.holding||sd.mood!==kwData.mood;
-    if(changed){
-      canvas.width=W;canvas.height=H;
-      paint(canvas,sd,genre||'fantasy');
-    }
+    if(!sd)sd=quickSd;
     panel._sd=sd;panel._genre=genre||'fantasy';
+
+    // Add mood tag to caption
     if(sd.mood){
-      var tag=document.createElement('span');tag.className='nx-scene-mood-tag';tag.textContent=sd.mood.toUpperCase();caption.appendChild(tag);
+      var tag=document.createElement('span');
+      tag.className='nx-scene-mood-tag';
+      tag.textContent=sd.mood.toUpperCase();
+      caption.appendChild(tag);
     }
+
+    // Build Pollinations prompt from scene data
+    var prompt=buildIllustrationPrompt(paragraph,genre||'fantasy',sd);
+    var imgW=Math.min(W*2,1280);  // request 2x for retina
+    var imgH=Math.round(imgW*9/16);
+    var url=buildPollinationsUrl(prompt,imgW,imgH);
+
+    // Load the AI image
+    img.onload=function(){
+      img.style.opacity='1';
+      loadingDot.style.display='none';
+      // Optionally update canvas to match for expand view
+      panel._aiUrl=url;
+    };
+    img.onerror=function(){
+      // Pollinations failed — canvas fallback already showing, just hide loader
+      loadingDot.style.display='none';
+      console.log('[NEXUS] Pollinations unavailable, using canvas illustration');
+    };
+    // Set src to trigger load (Pollinations generates on GET)
+    img.src=url;
+
   }).catch(function(){
     panel._sd=quickSd;panel._genre=genre||'fantasy';
+    loadingDot.style.display='none';
   });
+
   return panel;
 }
 
