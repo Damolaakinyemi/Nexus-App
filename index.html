@@ -2776,6 +2776,11 @@ function runHealthCheck(){
   } else {
     REPAIR.errorCount = 0;
   }
+  /* Retry music if a genre is pending but audio is silent */
+  var bgm=document.getElementById('bgMusic');
+  if(bgm&&window._pendingGenre&&(bgm.paused||bgm.src==='')){
+    _musicUnlockHandler();
+  }
 }
 setInterval(runHealthCheck, 10000);
 
@@ -3044,52 +3049,56 @@ function saveUserPrefs(){localStorage.setItem('nexus_user_prefs',JSON.stringify(
 /* ═══════════ BACKGROUND MUSIC ═══════════ */
 window._currentTrack=null;
 window.stopMusic=function(){var audio=document.getElementById('bgMusic');if(audio){audio.pause();audio.currentTime=0;window._currentTrack=null;}};
+/* ─ MUSIC ENGINE ─
+   Stores the pending genre so any user interaction
+   can trigger it. No load() call — just set src + play.
+   The self-repair health check also retries if silent. */
+window._pendingGenre=null;
+
+function _attemptPlay(audio,track){
+  audio.volume=(USER_PREFS&&USER_PREFS.volume!==undefined)?USER_PREFS.volume/100:0.5;
+  return audio.play().then(function(){
+    window._currentTrack=track;
+    window._pendingGenre=null;
+  });
+}
+
+function _musicUnlockHandler(){
+  var audio=document.getElementById('bgMusic');
+  if(!audio||!window._pendingGenre)return;
+  var map=window._musicMap||{};
+  var track=map[window._pendingGenre]||'/fantasy.mp3';
+  if(audio.src.indexOf(track)<0){audio.src=track;audio.loop=true;}
+  _attemptPlay(audio,track).catch(function(){});
+}
+
 window.playMusicForGenre=function(genre){
   var audio=document.getElementById('bgMusic');if(!audio)return;
   var map={
-    thriller:    '/thriller.mp3',
-    fantasy:     '/fantasy.mp3',
-    horror:      '/horror.mp3',
-    isekai:      '/isekai.mp3',
-    mystery:     '/mystery.mp3',
-    romance:     '/romance.mp3',
-    scifi:       '/scifi.mp3',
-    noir:        '/noir.mp3',
-    survival:    '/survival.mp3',
-    supernatural:'/supernatural.mp3',
-    historical:  '/historical.mp3',
-    random:      '/adventure.mp3'
+    thriller:'/thriller.mp3',fantasy:'/fantasy.mp3',horror:'/horror.mp3',
+    isekai:'/isekai.mp3',mystery:'/mystery.mp3',romance:'/romance.mp3',
+    scifi:'/scifi.mp3',noir:'/noir.mp3',survival:'/survival.mp3',
+    supernatural:'/supernatural.mp3',historical:'/historical.mp3',random:'/adventure.mp3'
   };
+  window._musicMap=map;
   var track=map[genre]||'/fantasy.mp3';
-  if(window._currentTrack===track&&!audio.paused)return;
-  /* Reset fully before loading new track */
+  /* Already playing the right track — do nothing */
+  if(window._currentTrack===track&&!audio.paused&&audio.src.indexOf(track)>-1)return;
+  /* Switch track */
   audio.pause();
-  audio.currentTime=0;
-  audio.src='';
-  window._currentTrack=null;
   audio.src=track;
   audio.loop=true;
-  audio.volume=(USER_PREFS&&USER_PREFS.volume!==undefined)?USER_PREFS.volume/100:0.5;
   audio.onerror=function(){
-    console.warn('[NEXUS/Music] File not found:',track);
-    audio.src='';window._currentTrack=null;
-  };
-  audio.load();
-  audio.play().then(function(){
-    window._currentTrack=track;
-  }).catch(function(e){
-    /* Autoplay blocked — retry on next user interaction */
-    console.warn('[NEXUS/Music] Autoplay blocked:',e.message);
+    console.warn('[NEXUS/Music] Missing:',track);
     window._currentTrack=null;
-    var unlock=function(){
-      audio.play().then(function(){
-        window._currentTrack=track;
-        document.removeEventListener('click',unlock);
-        document.removeEventListener('keydown',unlock);
-      }).catch(function(){});
-    };
-    document.addEventListener('click',unlock,{once:true});
-    document.addEventListener('keydown',unlock,{once:true});
+    window._pendingGenre=null;
+  };
+  window._pendingGenre=genre;
+  _attemptPlay(audio,track).catch(function(){
+    /* Autoplay blocked — queue for next interaction */
+    document.addEventListener('click',_musicUnlockHandler,{once:true});
+    document.addEventListener('touchstart',_musicUnlockHandler,{once:true});
+    document.addEventListener('keydown',_musicUnlockHandler,{once:true});
   });
 };
 
