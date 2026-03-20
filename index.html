@@ -1441,15 +1441,23 @@ function paint(canvas,sceneData,genre){
   function outline(col,w){ctx.strokeStyle=col||ink;ctx.lineWidth=w||olw;ctx.stroke();}
   function fillOutline(fill,col,w){ctx.fillStyle=fill;ctx.fill();outline(col,w);}
 
-  /* ① SKY ── pale gradient, illustrated */
-  var sky=ctx.createLinearGradient(0,0,0,hY*1.2);
-  sky.addColorStop(0,p.sky[0]);
-  sky.addColorStop(.55,p.sky[1]);
-  sky.addColorStop(1,p.sky[2]);
-  ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+  /* For interior environments, skip outdoor horizon flora */
+  var isInterior=(env==='hospital'||env==='cafe'||env==='apartment'||env==='interior');
 
-  /* ② CLOUDS ── flat white, hand-drawn oval clusters */
-  var nClouds=tod==='night'||tod==='midnight'?0:ri(2,5);
+  /* ① SKY ── pale gradient for outdoors; neutral fill for interiors */
+  if(isInterior){
+    /* Interior base — the specific painter will draw walls/floor */
+    ctx.fillStyle=lerpColor(p.sky[0],p.ground,.06);ctx.fillRect(0,0,W,H);
+  } else {
+    var sky=ctx.createLinearGradient(0,0,0,hY*1.2);
+    sky.addColorStop(0,p.sky[0]);
+    sky.addColorStop(.55,p.sky[1]);
+    sky.addColorStop(1,p.sky[2]);
+    ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+  }
+
+  /* ② CLOUDS ── outdoor only */
+  var nClouds=(isInterior||tod==='night'||tod==='midnight')?0:ri(2,5);
   for(var ci=0;ci<nClouds;ci++){
     var cx=rnd(W*.05,W*.9),cy=rnd(H*.04,hY*.55),cr=rnd(W*.06,W*.16);
     ctx.save();ctx.translate(cx,cy);ctx.scale(1,.55);
@@ -1464,6 +1472,8 @@ function paint(canvas,sceneData,genre){
     ctx.restore();
   }
 
+  /* ③-⑤ OUTDOOR BACKGROUND ── hills, trees, ground (skipped for interiors) */
+  if(!isInterior){
   /* ③ DISTANT HILLS / BACKGROUND ── flat layered shapes */
   /* Far hill */
   ctx.beginPath();ctx.moveTo(0,hY+H*.08);
@@ -1497,47 +1507,44 @@ function paint(canvas,sceneData,genre){
   ctx.bezierCurveTo(W*.25,hY+H*.02,W*.75,hY+H*.02,W,hY+H*.06);
   ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
   ctx.fillStyle=p.ground;ctx.fill();
-  /* Hatching on ground */
   ctx.save();ctx.clip();
   ctx.strokeStyle=p.ground2;ctx.lineWidth=.8;
   for(var gi=0;gi<Math.floor(H*.3/8);gi++){
     var gy=hY+H*.1+gi*8;
-    ctx.beginPath();
-    ctx.moveTo(0,gy+rnd(-1,1));
-    ctx.bezierCurveTo(W*.3,gy+rnd(-3,3),W*.7,gy+rnd(-3,3),W,gy+rnd(-1,1));
-    ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,gy+rnd(-1,1));ctx.bezierCurveTo(W*.3,gy+rnd(-3,3),W*.7,gy+rnd(-3,3),W,gy+rnd(-1,1));ctx.stroke();
   }
   ctx.restore();
+  ctx.beginPath();ctx.moveTo(0,H*.76+rnd(-10,10));ctx.bezierCurveTo(W*.3,H*.72,W*.7,H*.72,W,H*.76+rnd(-10,10));ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fillStyle=p.ground2;ctx.fill();outline(ink,olw*.6);
+  } /* end !isInterior */
+  if(env==='hospital'){paintHospital(ctx,W,H,hY,p,ink,olw,rnd,ri,sceneData);}
+  else if(env==='cafe'){paintCafe(ctx,W,H,hY,p,ink,olw,rnd,ri,sceneData);}
+  else if(env==='apartment'){paintApartment(ctx,W,H,hY,p,ink,olw,rnd,ri,sceneData);}
+  else if(env==='castle'||env==='interior'){paintCastle(ctx,W,H,hY,p,ink,olw,rnd,ri);}
+  else if(env==='city'){paintCity(ctx,W,H,hY,p,ink,olw,rnd,ri);}
+  else if(env==='coast'){paintWater(ctx,W,H,hY,p,ink,olw,rnd);}
+  else if(env==='mountain'||env==='desert'){paintMountains(ctx,W,H,hY,p,ink,olw,rnd);}
+  else if(env==='cave'){paintCave(ctx,W,H,hY,p,ink,olw,rnd,ri);}
+  /* For interior environments, skip outdoor horizon flora */
+  var isInterior=(env==='hospital'||env==='cafe'||env==='apartment'||env==='interior');
 
-  /* Ground layer 2 (darker foreground strip) */
-  ctx.beginPath();
-  ctx.moveTo(0,H*.76+rnd(-10,10));
-  ctx.bezierCurveTo(W*.3,H*.72,W*.7,H*.72,W,H*.76+rnd(-10,10));
-  ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
-  ctx.fillStyle=p.ground2;ctx.fill();
-  outline(ink,olw*.6);
-
-  /* ⑥ ENVIRONMENT-SPECIFIC DETAILS */
-  if(env==='castle'||env==='interior'){paintCastle(ctx,W,H,hY,p,ink,olw,rnd,ri);}
-  if(env==='city'){paintCity(ctx,W,H,hY,p,ink,olw,rnd,ri);}
-  if(env==='coast'){paintWater(ctx,W,H,hY,p,ink,olw,rnd);}
-  if(env==='mountain'||env==='desert'){paintMountains(ctx,W,H,hY,p,ink,olw,rnd);}
-  if(env==='cave'){paintCave(ctx,W,H,hY,p,ink,olw,rnd,ri);}
-
-  /* ⑦ FOREGROUND FLORA ── detailed illustrated plants */
-  var nFlora=ri(4,9);
-  for(var fi=0;fi<nFlora;fi++){
-    var fx=rnd(0,W),fy=H*.72+rnd(0,H*.22),fh=rnd(H*.08,H*.22);
-    paintFlora(ctx,fx,fy,fh,p,ink,olw,rnd,ri,seed+fi*7);
+  /* ⑦ FOREGROUND FLORA ── only outdoors */
+  if(!isInterior){
+    var nFlora=ri(4,9);
+    for(var fi=0;fi<nFlora;fi++){
+      var fx=rnd(0,W),fy=H*.72+rnd(0,H*.22),fh=rnd(H*.08,H*.22);
+      paintFlora(ctx,fx,fy,fh,p,ink,olw,rnd,ri,seed+fi*7);
+    }
   }
 
-  /* ⑧ FIGURES */
+  /* ⑧ FIGURES — placed appropriately for environment */
   var subjects=(sceneData&&sceneData.subjects)||[{pose:'standing',position:'center',scale:'mid'}];
   subjects.forEach(function(s){
     var posX={left:W*.28,center:W*.5,right:W*.72}[s.position||'center']||W*.5;
     posX+=rnd(-W*.04,W*.04);
     var scale={near:.52,mid:.38,far:.22}[s.scale||'mid']||.38;
-    var sh=H*scale,baseY=H*.62+rnd(-H*.02,H*.02);
+    var sh=H*scale;
+    /* Interior figures stand on the floor (~H*.72), outdoor on ground (~H*.62) */
+    var baseY=isInterior?(H*.72+rnd(-H*.01,H*.01)):(H*.62+rnd(-H*.02,H*.02));
     paintFigure(ctx,posX,baseY,sh,s.pose||'standing',p,ink,olw,rnd);
   });
 
@@ -1682,6 +1689,186 @@ function paintFlora(ctx,x,y,h,p,ink,olw,rnd,ri,seed){
       /* Surface lines */
       ctx.beginPath();ctx.moveTo(rcx-rcr*.3,rcy-rcr*.1);ctx.quadraticCurveTo(rcx,rcy-rcr*.3,rcx+rcr*.3,rcy-rcr*.1);
       ctx.strokeStyle=p.rock2;ctx.lineWidth=.7;ctx.stroke();
+    }
+  }
+}
+
+/* ════ HOSPITAL INTERIOR ═══════════════════════════ */
+function paintHospital(ctx,W,H,hY,p,ink,olw,rnd,ri,sd){
+  var details=(sd&&sd.interiorDetails)||'hospital_corridor';
+  /* Floor */
+  ctx.fillStyle='#e8e4dc';ctx.fillRect(0,H*.55,W,H*.45);
+  /* Floor tiles */
+  ctx.strokeStyle=ink;ctx.lineWidth=.6;ctx.globalAlpha=.12;
+  for(var fx=0;fx<W;fx+=W/8){ctx.beginPath();ctx.moveTo(fx,H*.55);ctx.lineTo(fx,H);ctx.stroke();}
+  for(var fy=H*.6;fy<H;fy+=H*.08){ctx.beginPath();ctx.moveTo(0,fy);ctx.lineTo(W,fy);ctx.stroke();}
+  ctx.globalAlpha=1;
+  /* Ceiling strip + fluorescent lights */
+  ctx.fillStyle='#f4f0e8';ctx.fillRect(0,0,W,H*.12);
+  ctx.strokeStyle=ink;ctx.lineWidth=olw*.8;ctx.strokeRect(0,0,W,H*.12);
+  /* Fluorescent light bars */
+  for(var li=0;li<ri(2,4);li++){
+    var lx=W*(.2+li*.22),lw=W*.14;
+    ctx.fillStyle='#fffef0';ctx.fillRect(lx,H*.03,lw,H*.05);
+    ctx.strokeStyle=ink;ctx.lineWidth=olw*.7;ctx.strokeRect(lx,H*.03,lw,H*.05);
+    /* Glow */
+    var lg=ctx.createRadialGradient(lx+lw/2,H*.06,2,lx+lw/2,H*.06,W*.15);
+    lg.addColorStop(0,'rgba(255,252,220,.22)');lg.addColorStop(1,'rgba(255,252,220,0)');
+    ctx.fillStyle=lg;ctx.fillRect(lx-W*.1,0,lw+W*.2,H*.45);
+  }
+  /* Back wall */
+  ctx.fillStyle='#ddd8cc';ctx.fillRect(0,H*.12,W,H*.43);
+  ctx.strokeStyle=ink;ctx.lineWidth=olw*.7;
+  /* Hallway perspective lines */
+  ctx.beginPath();ctx.moveTo(0,H*.12);ctx.lineTo(W*.35,H*.38);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(W,H*.12);ctx.lineTo(W*.65,H*.38);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(0,H*.55);ctx.lineTo(W*.35,H*.38);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(W,H*.55);ctx.lineTo(W*.65,H*.38);ctx.stroke();
+  /* Door at end of corridor */
+  var dw=W*.12,dh=H*.22,dx=W*.44;
+  ctx.fillStyle='#c8b898';ctx.fillRect(dx,H*.2,dw,dh);
+  ctx.strokeStyle=ink;ctx.lineWidth=olw;ctx.strokeRect(dx,H*.2,dw,dh);
+  ctx.beginPath();ctx.arc(dx+dw*.85,H*.2+dh*.5,dw*.06,0,Math.PI*2);
+  ctx.fillStyle=p.accent;ctx.fill();ctx.stroke();
+  /* Vending machine if relevant */
+  if(details==='vending_machine'||details==='hospital_corridor'){
+    var vmx=W*.72,vmw=W*.12,vmh=H*.32,vmy=H*.23;
+    ctx.fillStyle='#a8a0d0';ctx.fillRect(vmx,vmy,vmw,vmh);
+    ctx.strokeStyle=ink;ctx.lineWidth=olw;ctx.strokeRect(vmx,vmy,vmw,vmh);
+    /* Display panel */
+    ctx.fillStyle='#202050';ctx.fillRect(vmx+vmw*.1,vmy+vmh*.05,vmw*.8,vmh*.35);
+    ctx.strokeStyle=ink;ctx.lineWidth=olw*.7;ctx.strokeRect(vmx+vmw*.1,vmy+vmh*.05,vmw*.8,vmh*.35);
+    /* Buttons grid */
+    for(var bi=0;bi<3;bi++) for(var bj=0;bj<3;bj++){
+      ctx.beginPath();ctx.arc(vmx+vmw*(.22+bi*.28),vmy+vmh*(.48+bj*.12),vmw*.06,0,Math.PI*2);
+      ctx.fillStyle=bi===1&&bj===1?p.accent:'#e8e0d0';ctx.fill();ctx.strokeStyle=ink;ctx.lineWidth=olw*.6;ctx.stroke();
+    }
+    /* Coin slot */
+    ctx.fillStyle='#181818';ctx.fillRect(vmx+vmw*.35,vmy+vmh*.88,vmw*.3,vmh*.04);
+    ctx.strokeStyle=ink;ctx.lineWidth=olw*.6;ctx.strokeRect(vmx+vmw*.35,vmy+vmh*.88,vmw*.3,vmh*.04);
+  }
+  /* Wall rail / handrail */
+  ctx.beginPath();ctx.moveTo(0,H*.42);ctx.lineTo(W*.35,H*.34);
+  ctx.strokeStyle=p.rock;ctx.lineWidth=H*.015;ctx.stroke();
+  ctx.strokeStyle=ink;ctx.lineWidth=olw*.8;ctx.stroke();
+  ctx.beginPath();ctx.moveTo(W,H*.42);ctx.lineTo(W*.65,H*.34);
+  ctx.strokeStyle=p.rock;ctx.lineWidth=H*.015;ctx.stroke();
+  ctx.strokeStyle=ink;ctx.lineWidth=olw*.8;ctx.stroke();
+}
+
+/* ════ CAFÉ INTERIOR ════════════════════════════════ */
+function paintCafe(ctx,W,H,hY,p,ink,olw,rnd,ri,sd){
+  /* Warm wall */
+  ctx.fillStyle=lerpColor(p.sky[0],p.ground,.15);ctx.fillRect(0,0,W,H*.58);
+  /* Floor */
+  ctx.fillStyle=lerpColor(p.ground2,p.rock,.3);ctx.fillRect(0,H*.58,W,H*.42);
+  ctx.strokeStyle=ink;ctx.lineWidth=olw*.7;
+  /* Floor planks */
+  ctx.globalAlpha=.1;
+  for(var fp=0;fp<W;fp+=W/6){ctx.beginPath();ctx.moveTo(fp,H*.58);ctx.lineTo(fp,H);ctx.stroke();}
+  ctx.globalAlpha=1;
+  /* Back counter */
+  ctx.fillStyle=p.rock;ctx.fillRect(W*.05,H*.32,W*.9,H*.26);
+  ctx.strokeStyle=ink;ctx.lineWidth=olw;ctx.strokeRect(W*.05,H*.32,W*.9,H*.26);
+  /* Counter top */
+  ctx.fillStyle=lerpColor(p.rock,p.ground,.5);ctx.fillRect(W*.05,H*.3,W*.9,H*.04);
+  ctx.strokeStyle=ink;ctx.lineWidth=olw*.8;ctx.strokeRect(W*.05,H*.3,W*.9,H*.04);
+  /* Espresso machine */
+  var emx=W*.38,emy=H*.15,emw=W*.24,emh=H*.17;
+  ctx.fillStyle='#c0b8b0';ctx.fillRect(emx,emy,emw,emh);
+  ctx.strokeStyle=ink;ctx.lineWidth=olw;ctx.strokeRect(emx,emy,emw,emh);
+  /* Machine dials */
+  for(var di=0;di<3;di++){ctx.beginPath();ctx.arc(emx+emw*(.2+di*.3),emy+emh*.4,emw*.07,0,Math.PI*2);ctx.fillStyle='#383830';ctx.fill();ctx.strokeStyle=ink;ctx.lineWidth=olw*.7;ctx.stroke();}
+  /* Spout */
+  ctx.fillStyle=p.rock2;ctx.fillRect(emx+emw*.38,emy+emh*.7,emw*.24,emh*.25);ctx.strokeStyle=ink;ctx.lineWidth=olw*.7;ctx.strokeRect(emx+emw*.38,emy+emh*.7,emw*.24,emh*.25);
+  /* Mugs on shelf */
+  for(var mi=0;mi<ri(3,6);mi++){
+    var mx=W*(.12+mi*.13),my=H*.28,mw=W*.06,mh=H*.05;
+    ctx.fillStyle=[p.accent2,p.flora[0],p.rock,'#e8e0d0'][mi%4];
+    ctx.beginPath();ctx.rect(mx,my,mw,mh);ctx.fill();ctx.strokeStyle=ink;ctx.lineWidth=olw*.7;ctx.stroke();
+    /* Handle */
+    ctx.beginPath();ctx.arc(mx+mw,my+mh*.5,mw*.3,-.4,Math.PI*.4);ctx.strokeStyle=ink;ctx.lineWidth=olw*.7;ctx.stroke();
+  }
+  /* Chalkboard menu */
+  ctx.fillStyle='#383830';ctx.fillRect(W*.68,H*.08,W*.22,H*.2);
+  ctx.strokeStyle=ink;ctx.lineWidth=olw;ctx.strokeRect(W*.68,H*.08,W*.22,H*.2);
+  ctx.strokeStyle='rgba(255,255,255,.45)';ctx.lineWidth=1;
+  for(var cl=0;cl<3;cl++){ctx.beginPath();ctx.moveTo(W*.72,H*(.12+cl*.056));ctx.lineTo(W*.88,H*(.12+cl*.056));ctx.stroke();}
+  /* Tables with cups */
+  for(var ti2=0;ti2<ri(1,3);ti2++){
+    var tx2=rnd(W*.05,W*.7),ty2=H*.68,tw2=W*.18,th2=H*.04;
+    /* Table top */
+    ctx.fillStyle=lerpColor(p.rock,p.ground,.5);ctx.fillRect(tx2,ty2,tw2,th2);
+    ctx.strokeStyle=ink;ctx.lineWidth=olw*.9;ctx.strokeRect(tx2,ty2,tw2,th2);
+    /* Table leg */
+    ctx.beginPath();ctx.moveTo(tx2+tw2/2,ty2+th2);ctx.lineTo(tx2+tw2/2,ty2+th2+H*.12);
+    ctx.strokeStyle=p.rock2;ctx.lineWidth=W*.018;ctx.stroke();ctx.strokeStyle=ink;ctx.lineWidth=olw*.7;ctx.stroke();
+    /* Cup on table */
+    ctx.beginPath();ctx.rect(tx2+tw2*.4,ty2-H*.04,tw2*.2,H*.04);
+    ctx.fillStyle='rgba(255,252,248,.9)';ctx.fill();ctx.strokeStyle=ink;ctx.lineWidth=olw*.7;ctx.stroke();
+  }
+  /* Window with light */
+  ctx.fillStyle='rgba(240,228,200,.55)';ctx.fillRect(W*.08,H*.06,W*.22,H*.22);
+  ctx.strokeStyle=ink;ctx.lineWidth=olw;ctx.strokeRect(W*.08,H*.06,W*.22,H*.22);
+  ctx.beginPath();ctx.moveTo(W*.19,H*.06);ctx.lineTo(W*.19,H*.28);ctx.strokeStyle=ink;ctx.lineWidth=olw*.8;ctx.stroke();
+  ctx.beginPath();ctx.moveTo(W*.08,H*.17);ctx.lineTo(W*.3,H*.17);ctx.stroke();
+  /* Light from window */
+  var wg=ctx.createLinearGradient(W*.08,H*.17,W*.4,H*.5);
+  wg.addColorStop(0,'rgba(255,240,200,.18)');wg.addColorStop(1,'rgba(255,240,200,0)');
+  ctx.fillStyle=wg;ctx.fillRect(W*.08,H*.06,W*.5,H*.5);
+}
+
+/* ════ APARTMENT INTERIOR ═══════════════════════════ */
+function paintApartment(ctx,W,H,hY,p,ink,olw,rnd,ri,sd){
+  /* Wall */
+  ctx.fillStyle=lerpColor(p.sky[0],p.ground,.08);ctx.fillRect(0,0,W,H*.6);
+  /* Floor */
+  ctx.fillStyle=lerpColor(p.ground,p.rock,.2);ctx.fillRect(0,H*.6,W,H*.4);
+  ctx.strokeStyle=ink;ctx.lineWidth=olw*.7;ctx.globalAlpha=.1;
+  for(var fi2=0;fi2<W;fi2+=W/5){ctx.beginPath();ctx.moveTo(fi2,H*.6);ctx.lineTo(fi2,H);ctx.stroke();}
+  ctx.globalAlpha=1;
+  /* Large window */
+  var wx=W*.55,wy=H*.06,ww=W*.38,wh=H*.42;
+  ctx.fillStyle='rgba(180,210,240,.35)';ctx.fillRect(wx,wy,ww,wh);
+  ctx.strokeStyle=ink;ctx.lineWidth=olw;ctx.strokeRect(wx,wy,ww,wh);
+  ctx.beginPath();ctx.moveTo(wx+ww/2,wy);ctx.lineTo(wx+ww/2,wy+wh);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(wx,wy+wh*.4);ctx.lineTo(wx+ww,wy+wh*.4);ctx.stroke();
+  /* Sky/outside through window */
+  ctx.fillStyle=lerpColor(p.sky[0],p.sky[1],.4);ctx.fillRect(wx+2,wy+2,ww-4,wh*.38);
+  /* Window light spill */
+  var wls=ctx.createLinearGradient(wx,wy+wh*.5,wx-W*.25,H);
+  wls.addColorStop(0,'rgba(220,230,245,.14)');wls.addColorStop(1,'rgba(220,230,245,0)');
+  ctx.fillStyle=wls;ctx.fillRect(0,wy,W*.8,H);
+  /* Sofa */
+  var sx=W*.04,sy=H*.5,sw=W*.4,sh2=H*.18;
+  ctx.fillStyle=p.flora[0];ctx.fillRect(sx,sy,sw,sh2);
+  ctx.strokeStyle=ink;ctx.lineWidth=olw;ctx.strokeRect(sx,sy,sw,sh2);
+  /* Sofa cushions */
+  for(var sc=0;sc<2;sc++){
+    ctx.fillStyle=lerpColor(p.flora[0],p.flora[1],.3);
+    ctx.fillRect(sx+sc*sw*.52,sy+H*.01,sw*.48,sh2*.55);
+    ctx.strokeStyle=ink;ctx.lineWidth=olw*.8;ctx.strokeRect(sx+sc*sw*.52,sy+H*.01,sw*.48,sh2*.55);
+  }
+  /* Sofa arm */
+  ctx.fillStyle=p.flora[0];ctx.fillRect(sx,sy-H*.04,sw*.08,sh2+H*.04);
+  ctx.strokeStyle=ink;ctx.lineWidth=olw*.8;ctx.strokeRect(sx,sy-H*.04,sw*.08,sh2+H*.04);
+  ctx.fillRect(sx+sw*.92,sy-H*.04,sw*.08,sh2+H*.04);ctx.strokeRect(sx+sw*.92,sy-H*.04,sw*.08,sh2+H*.04);
+  /* Small table */
+  ctx.fillStyle=p.rock;ctx.fillRect(W*.46,H*.56,W*.1,H*.03);ctx.strokeStyle=ink;ctx.lineWidth=olw*.8;ctx.strokeRect(W*.46,H*.56,W*.1,H*.03);
+  /* Table legs */
+  ctx.beginPath();ctx.moveTo(W*.48,H*.59);ctx.lineTo(W*.48,H*.68);ctx.strokeStyle=p.rock2;ctx.lineWidth=W*.012;ctx.stroke();ctx.strokeStyle=ink;ctx.lineWidth=olw*.7;ctx.stroke();
+  ctx.beginPath();ctx.moveTo(W*.54,H*.59);ctx.lineTo(W*.54,H*.68);ctx.strokeStyle=p.rock2;ctx.lineWidth=W*.012;ctx.stroke();ctx.strokeStyle=ink;ctx.lineWidth=olw*.7;ctx.stroke();
+  /* Bookshelf on wall */
+  ctx.fillStyle=p.rock2;ctx.fillRect(W*.06,H*.14,W*.28,H*.28);ctx.strokeStyle=ink;ctx.lineWidth=olw;ctx.strokeRect(W*.06,H*.14,W*.28,H*.28);
+  for(var shelf=0;shelf<3;shelf++){
+    ctx.fillStyle=lerpColor(p.rock,p.rock2,.5);ctx.fillRect(W*.06,H*(.14+shelf*.09),W*.28,H*.012);ctx.strokeStyle=ink;ctx.lineWidth=olw*.6;ctx.strokeRect(W*.06,H*(.14+shelf*.09),W*.28,H*.012);
+    /* Books */
+    var bx2=W*.07;
+    for(var bk=0;bk<ri(4,8);bk++){
+      var bkw=rnd(W*.02,W*.04),bkh=rnd(H*.05,H*.07);
+      ctx.fillStyle=[p.accent,p.flora[1],p.rock,p.accent2,p.flora[0]][bk%5];
+      ctx.fillRect(bx2,H*(.15+shelf*.09)-bkh,bkw,bkh);ctx.strokeStyle=ink;ctx.lineWidth=olw*.6;ctx.strokeRect(bx2,H*(.15+shelf*.09)-bkh,bkw,bkh);
+      bx2+=bkw+rnd(1,3);
     }
   }
 }
@@ -1872,66 +2059,103 @@ function paintStipple(ctx,W,H,p,rnd){
 
 /* ════ LOCAL FALLBACK PARSER ════════════════════ */
 
-/* ── SCENE EXTRACTOR ── Uses callClaude for accurate scene parsing */
+/* ── SCENE EXTRACTOR ── Uses callClaude with smart environment detection */
 async function extractSceneData(paragraph,genre,tone){
-  var sys='You extract paintable scene data from story text for a cinematic illustration engine.\nReturn ONLY raw JSON (no markdown, no explanation):\n{"environment":"forest|city|interior|desert|coast|mountain|castle|void|ruins|cave","timeOfDay":"dawn|day|dusk|night|midnight","weather":"clear|fog|storm|rain|snow","subjects":[{"type":"figure","pose":"standing|running|crouching|fallen","position":"left|center|right","scale":"near|mid|far"}],"lightSource":"left|center|right","mood":"dread|wonder|grief|rage|hope|despair|longing|triumph","dominantColor":"amber|crimson|teal|violet|gold|ash|jade","hasHorizon":true,"foregroundElements":["fire","mist","rocks","debris"]}\nsubjects: 1-3 max. foregroundElements: 0-3 max. Infer from genre "'+genre+'" if unclear.';
+  var modernTest=/hospital|clinic|doctor|nurse|vending machine|fluorescent|ward|\bcafé\b|\bcafe\b|coffee shop|diner|\brestaurant|apartment|bedroom|kitchen|living room|office|corridor|hallway/i;
+  var isModern=modernTest.test(paragraph);
+  var envHint='';
+  if(isModern){
+    if(/hospital|clinic|doctor|nurse|vending|ward/i.test(paragraph))envHint='hospital';
+    else if(/café|cafe|coffee shop|diner|restaurant/i.test(paragraph))envHint='cafe';
+    else if(/apartment|bedroom|kitchen|living room/i.test(paragraph))envHint='apartment';
+    else envHint='interior';
+  }
+  var envList=isModern?'hospital|cafe|apartment|interior|city':'forest|city|interior|cafe|hospital|apartment|desert|coast|mountain|castle|ruins|cave';
+  var sys='Read this story text and extract ACCURATE scene data. Be literal — only use environments actually described in the text.\n'+(envHint?'IMPORTANT: The text is set in a '+envHint+' — use environment "'+envHint+'".\n':'')+'Return ONLY raw JSON:\n{"environment":"'+envList+'","timeOfDay":"dawn|day|dusk|night","weather":"clear|rain|fog|snow","subjects":[{"pose":"standing|running|crouching","position":"left|center|right","scale":"near|mid|far"}],"mood":"longing|dread|wonder|grief|hope|tension|warmth|despair","dominantColor":"amber|crimson|teal|violet|gold|ash|jade","interiorDetails":"vending_machine|hospital_corridor|cafe_counter|rain_window|fireplace|bookshelves|none"}\nDo NOT default to castle/forest for modern stories. Count real subjects in text (max 3).';
   try{
-    var raw=await callClaude([{role:'user',content:'Scene data for: "'+paragraph.slice(0,280)+'"'}],sys,220);
+    var raw=await callClaude([{role:'user',content:'Scene: "'+paragraph.slice(0,350)+'"'}],sys,260);
     if(!raw)return null;
-    return JSON.parse(raw.replace(/```[\w]*/g,'').replace(/```/g,'').trim());
+    var parsed=JSON.parse(raw.replace(/```[\w]*/g,'').replace(/```/g,'').trim());
+    /* Safety override for modern settings */
+    if(isModern&&(parsed.environment==='castle'||parsed.environment==='forest'||parsed.environment==='ruins'||parsed.environment==='mountain'||parsed.environment==='cave')){
+      parsed.environment=envHint||'interior';
+    }
+    return parsed;
   }catch(e){return null;}
 }
 
-/* ── LOCAL FALLBACK PARSER ── Used if Claude call fails */
+/* ── LOCAL FALLBACK PARSER ── Used if Claude call fails — reads text literally */
 function parseScene(text,genre){
   var t=(text||'').toLowerCase();
   var env='void';
-  if(/forest|tree|wood|oak|pine|grove|jungle/.test(t))env='forest';
-  else if(/castle|tower|fortress|dungeon|battlements/.test(t))env='castle';
-  else if(/street|city|alley|building|neon|concrete|urban/.test(t))env='city';
-  else if(/mountain|cliff|peak|ridge|summit|hill/.test(t))env='mountain';
-  else if(/sea|ocean|shore|coast|beach|wave|lake|river/.test(t))env='coast';
-  else if(/desert|sand|dune|wasteland/.test(t))env='desert';
-  else if(/cave|cavern|tunnel|grotto/.test(t))env='cave';
-  else if(/ruin|rubble|wreck|debris|smoke|aftermath/.test(t))env='ruins';
-  else if(/room|corridor|hall|chamber|inside/.test(t))env='interior';
-  else{var def={fantasy:'castle',thriller:'city',horror:'forest',romance:'coast',scifi:'ruins',noir:'city',survival:'forest',supernatural:'forest',historical:'castle',mystery:'city',isekai:'castle',survival:'forest'};env=def[genre]||'void';}
-  var tod='night';
-  if(/dawn|sunrise|morning|first light/.test(t))tod='dawn';
-  else if(/noon|midday|afternoon|bright day/.test(t))tod='day';
-  else if(/dusk|sunset|twilight|evening|last light/.test(t))tod='dusk';
-  else if(/midnight|dead of night/.test(t))tod='midnight';
-  else{var tDef={romance:'dusk',thriller:'night',horror:'midnight',scifi:'night',noir:'night',historical:'dawn',fantasy:'dusk',survival:'day'};tod=tDef[genre]||'night';}
+  /* Modern interiors — checked FIRST, highest priority */
+  if(/hospital|clinic|doctor|nurse|vending machine|emergency room|ward|\biv\b|scrubs|stethoscope|gurney|operating/.test(t))env='hospital';
+  else if(/\bcafé|\bcafe|coffee shop|diner|\brestaurant|barista|espresso|booth|counter stool|menu board/.test(t))env='cafe';
+  else if(/apartment|\bbedroom|\bkitchen|living room|couch|sofa|fridge|microwave|hallway|front door|bathroom/.test(t))env='apartment';
+  else if(/office|conference room|cubicle|boardroom|desk|computer screen|fluorescent light/.test(t))env='interior';
+  else if(/library|bookshelf|reading room|archive/.test(t))env='interior';
+  /* Outdoor / fantasy — only if clearly described */
+  else if(/\bforest|\btree|\bwood|\boak|pine|grove|jungle/.test(t))env='forest';
+  else if(/\bcastle|\btower|fortress|dungeon|battlements|drawbridge/.test(t))env='castle';
+  else if(/\bstreet|city street|alley|neon sign|concrete|urban|skyline/.test(t))env='city';
+  else if(/\bmountain|\bcliff|\bpeak|ridge|summit/.test(t))env='mountain';
+  else if(/\bsea|\bocean|\bshore|\bcoast|\bbeach|\bwave/.test(t))env='coast';
+  else if(/desert|sand dune|wasteland/.test(t))env='desert';
+  else if(/\bcave|cavern|grotto/.test(t))env='cave';
+  else if(/ruin|rubble|wreck/.test(t))env='ruins';
+  else if(/\broom|corridor|hall|chamber|inside|window|door|ceiling|floor/.test(t))env='interior';
+  else{
+    /* Smart genre defaults — romance should be cafe/interior not coast */
+    var def={fantasy:'castle',thriller:'city',horror:'forest',romance:'cafe',
+             scifi:'city',noir:'city',survival:'forest',supernatural:'forest',
+             historical:'interior',mystery:'interior',isekai:'castle'};
+    env=def[genre]||'city';
+  }
+  var tod='day';
+  if(/dawn|sunrise|early morning/.test(t))tod='dawn';
+  else if(/afternoon|noon|midday/.test(t))tod='day';
+  else if(/dusk|sunset|twilight|evening/.test(t))tod='dusk';
+  else if(/night|dark|midnight/.test(t))tod='night';
+  else{var tDef={romance:'day',thriller:'night',horror:'night',scifi:'night',noir:'night',historical:'day',fantasy:'dusk',survival:'day'};tod=tDef[genre]||'day';}
   var weather='clear';
   if(/rain|drizzle|downpour|wet/.test(t))weather='rain';
   else if(/fog|mist|haze/.test(t))weather='fog';
   else if(/storm|thunder/.test(t))weather='storm';
   else if(/snow|frost|blizzard/.test(t))weather='snow';
   var subjects=[];
-  if(/she|he|they|her|him|figure|man|woman|soldier|warrior|stood|stand|walk|ran|run/.test(t)){
+  var hasPerson=/\bshe\b|\bhe\b|\bher\b|\bhim\b|\bthey\b|woman|man|\bgirl\b|\bboy\b|figure|person|doctor|nurse|officer/.test(t);
+  if(hasPerson){
     var pose='standing';
-    if(/run|ran|sprint|flee|chase|rush/.test(t))pose='running';
-    else if(/crouch|kneel|bend/.test(t))pose='crouching';
-    else if(/fall|fell|collapse|lay|lying/.test(t))pose='fallen';
-    var pos=['left','center','right'][Math.floor(Math.random()*3)];
+    if(/run|ran|sprint|flee|rush/.test(t))pose='running';
+    else if(/crouch|kneel|bend|sitting|sat/.test(t))pose='crouching';
+    else if(/fall|fell|collapse|lying|lay/.test(t))pose='fallen';
+    var pos=['left','center','right'][Math.floor(Date.now()%3)];
     subjects.push({pose:pose,position:pos,scale:'mid'});
-    if(/together|two|both|each other|followed/.test(t)){subjects.push({pose:'standing',position:pos==='left'?'right':'left',scale:'far'});}
-  }else{subjects.push({pose:'standing',position:['left','center','right'][Math.floor(Math.random()*3)],scale:'far'});}
+    var hasSecond=/two of them|together|both|each other|second person|she and|he and/.test(t);
+    if(hasSecond)subjects.push({pose:'standing',position:pos==='left'?'right':'left',scale:'mid'});
+  }
   var mood='wonder';
-  if(/fear|terror|horror|dread/.test(t))mood='dread';
-  else if(/grief|sorrow|loss|died/.test(t))mood='grief';
-  else if(/rage|anger|fury|destroy/.test(t))mood='rage';
-  else if(/hope|light|save|dawn/.test(t))mood='hope';
-  else if(/despair|hopeless|nothing|end/.test(t))mood='despair';
-  else if(/longing|miss|remember|wish/.test(t))mood='longing';
-  else{var mDef={romance:'longing',thriller:'dread',horror:'dread',scifi:'wonder',noir:'despair',fantasy:'wonder',survival:'hope',supernatural:'dread'};mood=mDef[genre]||'wonder';}
-  var fe=[];
-  if(/fire|flame|torch|burning/.test(t))fe.push('fire');
-  if(/mist|fog|smoke/.test(t))fe.push('mist');
-  var lx='center';
-  if(/left|west/.test(t))lx='left';
-  else if(/right|east/.test(t))lx='right';
-  return{environment:env,timeOfDay:tod,weather:weather,subjects:subjects,lightSource:lx,mood:mood,hasHorizon:env!=='interior'&&env!=='cave',foregroundElements:fe};
+  if(/fear|terror|dread|afraid/.test(t))mood='dread';
+  else if(/grief|sorrow|loss|died|death/.test(t))mood='grief';
+  else if(/anger|rage|fury/.test(t))mood='rage';
+  else if(/hope|safe|relief|saved/.test(t))mood='hope';
+  else if(/despair|hopeless|lost/.test(t))mood='despair';
+  else if(/miss|longing|remember|wish|ache/.test(t))mood='longing';
+  else if(/tense|nervous|careful|watching|aware/.test(t))mood='tension';
+  else if(/warm|comfort|safe|gentle|soft/.test(t))mood='warmth';
+  else{var mDef={romance:'warmth',thriller:'tension',horror:'dread',scifi:'wonder',noir:'despair',fantasy:'wonder',survival:'hope',supernatural:'dread'};mood=mDef[genre]||'wonder';}
+  var interiorDetails='none';
+  if(/vending machine/.test(t))interiorDetails='vending_machine';
+  else if(/hospital|clinic/.test(t))interiorDetails='hospital_corridor';
+  else if(/café|cafe|coffee|diner/.test(t))interiorDetails='cafe_counter';
+  else if(/rain|window|glass/.test(t))interiorDetails='rain_window';
+  else if(/fire|fireplace|hearth/.test(t))interiorDetails='fireplace';
+  else if(/book|shelf|library/.test(t))interiorDetails='bookshelves';
+  var dominantColor={romance:'amber',thriller:'crimson',mystery:'ash',isekai:'violet',horror:'crimson',scifi:'teal',fantasy:'gold',noir:'ash',survival:'gold',supernatural:'violet',historical:'gold',random:'gold'}[genre]||'gold';
+  return{environment:env,timeOfDay:tod,weather:weather,subjects:subjects,mood:mood,
+         interiorDetails:interiorDetails,dominantColor:dominantColor,
+         hasHorizon:env!=='hospital'&&env!=='cafe'&&env!=='apartment'&&env!=='interior'&&env!=='cave',
+         foregroundElements:[]};
 }
 
 /* ── BUILD PANEL ── */
