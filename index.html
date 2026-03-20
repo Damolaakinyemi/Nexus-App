@@ -1216,29 +1216,11 @@ showPage=function(id){_origShowPage(id);var noNav=['auth-page'];showBottomNav(no
   window.addEventListener('beforeunload',function(){if(typeof CU!=='undefined'&&CU&&!CU.guest&&typeof G!=='undefined'&&G.chapter>1){try{saveGame(false);}catch(e){}}});
 })();
 </script>
-
-<!-- NEXUS SCENE PAINTER v3 -->
+<!-- NEXUS SCENE PAINTER v3.0 -->
 <script>
-'use strict';
 (function(){
-/* ═══════════════════════════════════════════════════════════════
-   NEXUS SCENE PAINTER v3.0 — STORY-MOMENT ENGINE
-   
-   Architecture:
-   1. EXTRACT: Claude reads paragraph → structured moment data
-      - setting, props, characters, action, mood, lighting
-      - 3-layer safety: Claude → keyword override → smart fallback
-   2. COLOR: palette chosen from mood+genre, not just genre
-   3. PAINT: setting-specific room + props from story + characters with held items
-   4. CACHE: paragraph hash → skip re-extraction on same text
-   
-   Settings covered: outdoor (forest, castle, city, coast, mountain,
-   desert, cave, ruins), interior (home, cafe, hospital, airport,
-   office, library, bar, restaurant, bedroom, courtroom), 
-   special (rain_street, snow_scene, night_scene)
-═══════════════════════════════════════════════════════════════ */
 'use strict';
-(function(){
+
 
 /* ════════════════════════════════════════════════════════════
    MUSIC
@@ -1530,7 +1512,7 @@ function makeRng(seed){
   var s=(seed||Date.now())%233280;
   function rnd(lo,hi){s=(s*9301+49297)%233280;return lo+(s/233280)*(hi-lo);}
   function ri(lo,hi){return Math.floor(rnd(lo,hi+1));}
-  return{rnd,ri};
+  return{rnd:rnd,ri:ri};
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -1697,7 +1679,7 @@ function paintInteriorBase(ctx,W,H,wallColor,floorColor,ink,olw){
   line(ctx,0,H*.64,W,H*.64,ink,olw*.8);
 }
 
-function paintWindow(ctx,x,y,w,h,skyColor,ink,olw,hasCurtains){
+function paintWindow(ctx,W,H,x,y,w,h,skyColor,ink,olw,hasCurtains){
   ctx.fillStyle=skyColor;ctx.fillRect(x,y,w,h);
   ctx.strokeStyle=ink;ctx.lineWidth=olw;ctx.strokeRect(x,y,w,h);
   line(ctx,x+w/2,y,x+w/2,y+h,ink,olw*.7);
@@ -1728,7 +1710,7 @@ function paintTable(ctx,x,y,w,h,col,ink,olw){
 function paintLivingRoom(ctx,W,H,p,ink,olw,R,sd){
   var props=sd&&sd.props||[];
   paintInteriorBase(ctx,W,H,p.wall||lerp(p.sky[0],p.ground,.06),p.floor||lerp(p.ground,p.rock,.18),ink,olw);
-  paintWindow(ctx,W*.55,H*.08,W*.34,H*.38,p.sky[0],ink,olw,true);
+  paintWindow(ctx,W,H,W*.55,H*.08,W*.34,H*.38,p.sky[0],ink,olw,true);
   // Sofa
   var sw=W*.42,sy=H*.52;
   filledRect(ctx,W*.04,sy,sw,H*.15,p.flora[0],ink,olw);
@@ -1773,7 +1755,7 @@ function paintKitchen(ctx,W,H,p,ink,olw,R,sd){
     line(ctx,W*(.12+cab*kw/4.1),ky+kh*.58,W*(.18+cab*kw/4.1),ky+kh*.58,ink,olw*.5);
   }
   // Window above counter
-  paintWindow(ctx,W*.55,H*.08,W*.3,H*.28,lerp(p.sky[0],p.sky[1],.4),ink,olw,false);
+  paintWindow(ctx,W,H,W*.55,H*.08,W*.3,H*.28,lerp(p.sky[0],p.sky[1],.4),ink,olw,false);
   // Props on counter
   if(props.indexOf('document')>-1||props.indexOf('table')>-1){
     drawDoc(ctx,W*.15,ky-H*.1,W*.2,H*.1,ink,olw);
@@ -1812,7 +1794,7 @@ function paintBedroom(ctx,W,H,p,ink,olw,R,sd){
   lg.addColorStop(0,'rgba(255,220,120,.18)');lg.addColorStop(1,'rgba(255,220,120,0)');
   ctx.fillStyle=lg;ctx.fillRect(bx+bw-W*.1,by-H*.25,W*.4,H*.35);
   // Window
-  paintWindow(ctx,W*.68,H*.08,W*.26,H*.32,p.sky[0],ink,olw,true);
+  paintWindow(ctx,W,H,W*.68,H*.08,W*.26,H*.32,p.sky[0],ink,olw,true);
 }
 
 // ── CAFE ──
@@ -1820,7 +1802,7 @@ function paintCafe(ctx,W,H,p,ink,olw,R,sd){
   var props=sd&&sd.props||[];
   paintInteriorBase(ctx,W,H,lerp(p.sky[0],p.ground,.04),lerp(p.ground,p.rock,.12),ink,olw);
   // Window
-  paintWindow(ctx,W*.06,H*.06,W*.26,H*.4,lerp(p.sky[0],'#c8dce8',.3),ink,olw,true);
+  paintWindow(ctx,W,H,W*.06,H*.06,W*.26,H*.4,lerp(p.sky[0],'#c8dce8',.3),ink,olw,true);
   // Counter back
   filledRect(ctx,W*.32,H*.28,W*.66,H*.34,lerp(p.rock,p.ground,.3),ink,olw);
   filledRect(ctx,W*.32,H*.26,W*.66,H*.04,lerp(p.rock2,p.ground,.3),ink,olw*.8);
@@ -2005,7 +1987,7 @@ function paintBar(ctx,W,H,p,ink,olw,R,sd){
 function paintRestaurant(ctx,W,H,p,ink,olw,R,sd){
   paintInteriorBase(ctx,W,H,lerp(p.sky[0],p.ground,.04),lerp(p.ground,p.rock,.1),ink,olw);
   // Candle-lit ambiance
-  paintWindow(ctx,W*.65,H*.06,W*.28,H*.38,lerp(p.sky[0],p.sky[1],.5),ink,olw,true);
+  paintWindow(ctx,W,H,W*.65,H*.06,W*.28,H*.38,lerp(p.sky[0],p.sky[1],.5),ink,olw,true);
   // Dining tables
   var n=R.ri(1,3);
   for(var ti=0;ti<n;ti++){
@@ -2042,7 +2024,7 @@ function paintOffice(ctx,W,H,p,ink,olw,R,sd){
     ctx.fillStyle=lg;ctx.fillRect(W*(li*.32),0,W*.42,H*.45);
   }
   // Large window
-  paintWindow(ctx,W*.6,H*.08,W*.34,H*.4,lerp(p.sky[0],p.sky[1],.3),ink,olw,false);
+  paintWindow(ctx,W,H,W*.6,H*.08,W*.34,H*.4,lerp(p.sky[0],p.sky[1],.3),ink,olw,false);
   // Desk
   paintTable(ctx,W*.04,H*.55,W*.5,H*.04,lerp(p.rock,p.ground,.35),ink,olw);
   // Monitor
@@ -2112,7 +2094,7 @@ function paintCourtroom(ctx,W,H,p,ink,olw,R,sd){
   ctx.strokeStyle=ink;ctx.lineWidth=olw*.6;ctx.strokeRect(W*.06,H*.1,W*.015,H*.3);
   filledRect(ctx,W*.075,H*.1,W*.06,H*.04,p.accent,ink,olw*.6);
   // Windows high up
-  for(var wi=0;wi<3;wi++)paintWindow(ctx,W*(.2+wi*.25),H*.02,W*.14,H*.1,lerp(p.sky[0],p.sky[1],.3),ink,olw*.8,false);
+  for(var wi=0;wi<3;wi++)paintWindow(ctx,W,H,W*(.2+wi*.25),H*.02,W*.14,H*.1,lerp(p.sky[0],p.sky[1],.3),ink,olw*.8,false);
 }
 
 // ── CHURCH ──
@@ -2517,7 +2499,7 @@ function buildPanel(genre){
     }
   };
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&panel.classList.contains('nx-scene-expanded')){panel.classList.remove('nx-scene-expanded');document.body.style.overflow='';}});
-  return{panel,canvas,caption,shimmer};
+  return{panel:panel,canvas:canvas,caption:caption,shimmer:shimmer};
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -2580,8 +2562,7 @@ var _poll=setInterval(function(){
   if(_pc>200)clearInterval(_poll);
 },50);
 
-window.NEXUS_SCENE={renderScene,paint,keywordDetect,extractScene};
-})();
+window.NEXUS_SCENE={renderScene:renderScene,paint:paint,keywordDetect:keywordDetect,extractScene:extractScene};
 
 })();
 </script>
