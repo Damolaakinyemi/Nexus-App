@@ -1,11 +1,11 @@
 export const config = { api: { bodyParser: true } };
 
-const NEXUS_TOKEN = 'nx_83c8a0f2fea04883418d0da02d49eef0';
 const rateLimitMap = new Map();
+
 function checkRateLimit(ip) {
   const now = Date.now();
-  const windowMs = 60 * 1000; // 1 minute
-  const maxRequests = 20;
+  const windowMs = 60 * 1000;
+  const maxRequests = 30;
   const entry = rateLimitMap.get(ip) || { count: 0, start: now };
   if (now - entry.start > windowMs) {
     rateLimitMap.set(ip, { count: 1, start: now });
@@ -19,9 +19,6 @@ function checkRateLimit(ip) {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
-
-  const token = req.headers['x-nexus-token'];
-  if (token !== NEXUS_TOKEN) return res.status(403).json({ error: 'Forbidden' });
 
   const ip = req.headers['x-forwarded-for'] || 'unknown';
   if (!checkRateLimit(ip)) {
