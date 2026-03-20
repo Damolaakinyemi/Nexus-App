@@ -2,7 +2,6 @@ export const config = { api: { bodyParser: true } };
 
 const NEXUS_TOKEN = 'nx_83c8a0f2fea04883418d0da02d49eef0';
 const rateLimitMap = new Map();
-
 function checkRateLimit(ip) {
   const now = Date.now();
   const windowMs = 60 * 1000; // 1 minute
