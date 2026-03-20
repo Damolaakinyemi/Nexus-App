@@ -1262,10 +1262,7 @@ async function callClaude(messages, systemPrompt, maxTokens, keyOverride){
   /* Normal path — call your Vercel route. Key stays on server. */
   var res = await fetch('/api/story', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-nexus-token': 'nx_83c8a0f2fea04883418d0da02d49eef0'
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   });
 
@@ -1370,7 +1367,7 @@ async function _speakHume(text){
   var description=HUME_PROMPTS[genre]+toneNote+(author?' Narrating a '+author+' novel.':'');
   var res=await fetch('/api/voice',{
     method:'POST',
-    headers:{'Content-Type':'application/json','x-nexus-token':'nx_83c8a0f2fea04883418d0da02d49eef0'},
+    headers:{'Content-Type':'application/json'},
     body:JSON.stringify({provider:'hume',text:text,genre:description})
   });
   /* Bail if user hit stop while we were fetching */
@@ -1392,7 +1389,7 @@ async function _speakEleven(text,voiceIdOverride){
   var vid=voiceIdOverride||ELEVEN_VOICES[genre]||'onwK4e9ZLuTAKqWW03F9';
   var res=await fetch('/api/voice',{
     method:'POST',
-    headers:{'Content-Type':'application/json','x-nexus-token':'nx_83c8a0f2fea04883418d0da02d49eef0'},
+    headers:{'Content-Type':'application/json'},
     body:JSON.stringify({provider:'elevenlabs',text:text,voiceId:vid})
   });
   if(VOICE.cancelled){VOICE.speaking=false;throw new Error('cancelled');}
@@ -1431,7 +1428,7 @@ function _playAudio(url,revoke){
     VOICE.currentAudio=audio;
     var prefs=typeof USER_PREFS!=='undefined'?USER_PREFS:{};
     audio.volume=prefs.volume!==undefined?Math.min(1,prefs.volume/100):0.9;
-    audio.onended=function(){VOICE.speaking=false;if(revoke)URL.revokeObjectURL(url);VOICE.currentAudio=null;resolve();};
+    audio.onended=function(){VOICE.speaking=false;if(revoke)URL.revokeObjectURL(url);VOICE.currentAudio=null;updateVoiceBtn(false);resolve();};
     audio.onerror=function(){VOICE.speaking=false;if(revoke)URL.revokeObjectURL(url);VOICE.currentAudio=null;reject(new Error('Playback failed'));};
     audio.play().catch(function(e){VOICE.speaking=false;reject(e);});
   });
@@ -1450,7 +1447,27 @@ function stopSpeaking(){
 }
 
 function toggleVoiceRead(){
-  if(VOICE.speaking){stopSpeaking();return;}
+  /* If audio is paused mid-play, resume it */
+  if(VOICE.currentAudio && VOICE.currentAudio.paused && !VOICE.cancelled){
+    VOICE.currentAudio.play().catch(function(){});
+    VOICE.speaking=true;
+    updateVoiceBtn(true);
+    return;
+  }
+  /* If speaking, pause (for audio) or stop (for browser TTS) */
+  if(VOICE.speaking){
+    if(VOICE.currentAudio){
+      VOICE.currentAudio.pause();
+      VOICE.speaking=false;
+      updateVoiceBtn(false);
+      var btn=document.getElementById('btnVoice');
+      if(btn){btn.textContent='▶ Resume';btn.style.color='var(--gold)';btn.style.borderColor='var(--gold)';}
+    } else {
+      stopSpeaking();
+    }
+    return;
+  }
+  /* Start reading the last paragraph */
   var paras=document.querySelectorAll('.spara');
   if(paras.length)speakText(paras[paras.length-1].textContent.replace(/\s+/g,' ').trim());
 }
@@ -1460,7 +1477,7 @@ function updateVoiceBtn(speaking){
   var badge=document.getElementById('voiceEngineBadge');
   if(!btn)return;
   if(speaking){
-    btn.textContent='⏹ Stop';
+    btn.textContent='⏸ Pause';
     btn.style.borderColor='var(--teal)';
     btn.style.color='var(--teal)';
     // Show engine badge only while playing
