@@ -1217,8 +1217,10 @@ showPage=function(id){_origShowPage(id);var noNav=['auth-page'];showBottomNav(no
 })();
 </script>
 
-<!-- NEXUS SCENE PAINTER v3.0 -->
+<!-- NEXUS SCENE PAINTER v3 -->
 <script>
+'use strict';
+(function(){
 /* ═══════════════════════════════════════════════════════════════
    NEXUS SCENE PAINTER v3.0 — STORY-MOMENT ENGINE
    
@@ -1539,7 +1541,11 @@ function filledRect(ctx,x,y,w,h,fill,stroke,sw){
   if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=sw||1.5;ctx.strokeRect(x,y,w,h);}
 }
 function roundRect(ctx,x,y,w,h,r,fill,stroke,sw){
-  ctx.beginPath();ctx.roundRect(x,y,w,h,r||0);
+  r=r||0;ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
   ctx.fillStyle=fill;ctx.fill();
   if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=sw||1.5;ctx.stroke();}
 }
@@ -1790,12 +1796,12 @@ function paintBedroom(ctx,W,H,p,ink,olw,R,sd){
   // Mattress
   filledRect(ctx,bx,by,bw,H*.2,lerp(p.sky[0],p.ground,.08),ink,olw);
   // Duvet
-  ctx.fillStyle=lerp(p.flora[0],p.sky[0],.4);ctx.beginPath();
-  ctx.roundRect(bx+bw*.02,by+H*.02,bw*.96,H*.17,H*.02);ctx.fill();ctx.strokeStyle=ink;ctx.lineWidth=olw;ctx.stroke();
+  ctx.fillStyle=lerp(p.flora[0],p.sky[0],.4);
+  (function(){var _x=bx+bw*.02,_y=by+H*.02,_w=bw*.96,_h=H*.17,_r=H*.02;ctx.beginPath();ctx.moveTo(_x+_r,_y);ctx.lineTo(_x+_w-_r,_y);ctx.quadraticCurveTo(_x+_w,_y,_x+_w,_y+_r);ctx.lineTo(_x+_w,_y+_h-_r);ctx.quadraticCurveTo(_x+_w,_y+_h,_x+_w-_r,_y+_h);ctx.lineTo(_x+_r,_y+_h);ctx.quadraticCurveTo(_x,_y+_h,_x,_y+_h-_r);ctx.lineTo(_x,_y+_r);ctx.quadraticCurveTo(_x,_y,_x+_r,_y);ctx.closePath();})();ctx.fill();ctx.strokeStyle=ink;ctx.lineWidth=olw;ctx.stroke();
   // Pillows
   for(var pi=0;pi<2;pi++){
     ctx.fillStyle=lerp(p.sky[0],p.cloud||'#fff',.5);
-    ctx.beginPath();ctx.roundRect(bx+bw*(.05+pi*.5),by-H*.03,bw*.42,H*.07,H*.02);ctx.fill();ctx.stroke();
+    (function(){var _x=bx+bw*(.05+pi*.5),_y=by-H*.03,_w=bw*.42,_h=H*.07,_r=H*.02;ctx.beginPath();ctx.moveTo(_x+_r,_y);ctx.lineTo(_x+_w-_r,_y);ctx.quadraticCurveTo(_x+_w,_y,_x+_w,_y+_r);ctx.lineTo(_x+_w,_y+_h-_r);ctx.quadraticCurveTo(_x+_w,_y+_h,_x+_w-_r,_y+_h);ctx.lineTo(_x+_r,_y+_h);ctx.quadraticCurveTo(_x,_y+_h,_x,_y+_h-_r);ctx.lineTo(_x,_y+_r);ctx.quadraticCurveTo(_x,_y,_x+_r,_y);ctx.closePath();ctx.fillStyle=lerp(p.sky[0],p.cloud||'#fff',.5);ctx.fill();ctx.strokeStyle=ink;ctx.lineWidth=olw*.8;ctx.stroke();})();
   }
   // Nightstand
   filledRect(ctx,bx+bw+W*.02,by,W*.1,H*.2,p.rock,ink,olw);
@@ -2415,12 +2421,11 @@ function paint(canvas, sceneData, genre){
   var ctx=canvas.getContext('2d');
   if(!ctx)return;
 
-  // Palette — use mood-resolved palette if available, then explicit colorPalette, then genre default
-  var pk = (sceneData&&sceneData._resolvedPalette) || GENRE_PAL[genre] || 'gold';
+  // Palette
+  var pk=GENRE_PAL[genre]||'gold';
   if(sceneData&&sceneData.colorPalette){
     var cpMap={'warm_amber':'amber','rose_pink':'amber','cool_blue':'teal','deep_crimson':'crimson',
-               'forest_green':'jade','grey_ash':'ash','violet_dusk':'violet','warm':'amber',
-               'cool':'teal','dark':'crimson','bright':'gold','neutral':'gold'};
+               'forest_green':'jade','grey_ash':'ash','violet_dusk':'violet'};
     if(cpMap[sceneData.colorPalette])pk=cpMap[sceneData.colorPalette];
   }
   var p=PAL[pk];
@@ -2520,7 +2525,7 @@ function buildPanel(genre){
 ════════════════════════════════════════════════════════════ */
 async function renderScene(paragraph,genre,tone,insertAfterEl){
   if(!paragraph||!insertAfterEl)return;
-  var {panel,canvas,caption,shimmer}=buildPanel(genre||'fantasy');
+  var _bp=buildPanel(genre||'fantasy');var panel=_bp.panel,canvas=_bp.canvas,caption=_bp.caption,shimmer=_bp.shimmer;
   if(insertAfterEl.nextSibling)insertAfterEl.parentNode.insertBefore(panel,insertAfterEl.nextSibling);
   else insertAfterEl.parentNode.appendChild(panel);
   await new Promise(function(r){requestAnimationFrame(r);});
@@ -2577,5 +2582,8 @@ var _poll=setInterval(function(){
 
 window.NEXUS_SCENE={renderScene,paint,keywordDetect,extractScene};
 })();
+
+})();
 </script>
 </body>
+</html>
