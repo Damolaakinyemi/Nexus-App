@@ -279,7 +279,7 @@ select.inp{background:var(--surface);padding:13px 12px;border:1px solid var(--bo
    - Foreground vignette pushed lower
    - Silhouettes have visible warm edges
 ═══════════════════════════════════════════════════ */
-.nx-scene-panel{width:calc(100% + 56px);margin-left:-28px;margin-right:-28px;aspect-ratio:16/9;position:relative;overflow:hidden;background:#0a0c14;cursor:zoom-in;border:1px solid rgba(160,168,184,.15);margin-top:6px;margin-bottom:6px;}
+.nx-scene-panel{width:calc(100% + 56px);margin-left:-28px;margin-right:-28px;aspect-ratio:16/9;min-height:200px;position:relative;overflow:hidden;background:#0a0c14;cursor:zoom-in;border:1px solid rgba(160,168,184,.15);margin-top:6px;margin-bottom:6px;}
 @media(max-width:600px){.nx-scene-panel{width:calc(100% + 40px);margin-left:-20px;margin-right:-20px;}}
 .nx-scene-panel canvas{position:absolute;inset:0;width:100%;height:100%;}
 .nx-scene-panel img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .9s ease;}
@@ -2606,16 +2606,18 @@ function buildPollinationsUrl(prompt,width,height){
 function buildPanel(genre){
   var panel=document.createElement('div');
   panel.className='nx-scene-panel';
-  panel.style.cssText='position:relative;overflow:hidden;background:#0a0c14;';
+  // DO NOT set panel.style.cssText — let .nx-scene-panel CSS class handle all layout
+  // (aspect-ratio, width, position:relative etc are in the class)
 
   // Canvas for instant fallback illustration
   var canvas=document.createElement('canvas');
-  canvas.style.cssText='position:absolute;inset:0;width:100%;height:100%;';
+  canvas.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;display:block;';
 
-  // AI image element (sits on top once loaded)
+  // AI image element (sits on top of canvas once loaded)
   var img=document.createElement('img');
-  img.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .8s ease;';
+  img.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .9s ease;display:block;';
   img.alt='Story illustration';
+  img.crossOrigin='anonymous';
 
   // Caption bar
   var caption=document.createElement('div');
@@ -2626,9 +2628,9 @@ function buildPanel(genre){
   var shimmer=document.createElement('div');
   shimmer.className='nx-scene-shimmer';
 
-  // Loading indicator
+  // Small pulsing dot = AI generating
   var loadingDot=document.createElement('div');
-  loadingDot.style.cssText='position:absolute;bottom:10px;right:10px;width:8px;height:8px;border-radius:50%;background:rgba(160,168,184,.5);animation:nxPulse 1.2s ease-in-out infinite;z-index:5;';
+  loadingDot.style.cssText='position:absolute;bottom:10px;right:10px;width:7px;height:7px;border-radius:50%;background:rgba(160,168,184,.6);animation:nxPulse 1.2s ease-in-out infinite;z-index:5;pointer-events:none;';
 
   panel.appendChild(canvas);
   panel.appendChild(img);
@@ -2636,7 +2638,7 @@ function buildPanel(genre){
   panel.appendChild(caption);
   panel.appendChild(loadingDot);
 
-  // Expand on click
+  // Expand / collapse on click
   panel.onclick=function(){
     if(panel.classList.contains('nx-scene-expanded')){
       panel.classList.remove('nx-scene-expanded');
@@ -2669,28 +2671,34 @@ async function renderScene(paragraph,genre,tone,insertAfterEl){
   if(insertAfterEl.nextSibling)insertAfterEl.parentNode.insertBefore(panel,insertAfterEl.nextSibling);
   else insertAfterEl.parentNode.appendChild(panel);
 
-  await new Promise(function(r){requestAnimationFrame(r);});
+  // Wait TWO frames so the browser calculates layout and aspect-ratio kicks in
+  await new Promise(function(r){requestAnimationFrame(function(){requestAnimationFrame(r);});});
 
-  var W=Math.floor(panel.offsetWidth)||680;
-  var H=Math.floor(W*9/16);
+  // Get actual rendered dimensions — fall back to safe defaults if layout not ready yet
+  var W=Math.floor(panel.offsetWidth)||640;
+  var H=Math.floor(panel.offsetHeight)||(Math.floor(W*9/16))||360;
+  // Safety: if still 0 (not in DOM yet), use known defaults
+  if(W<10){W=640;H=360;}
+
   canvas.width=W;canvas.height=H;
 
-  // 1. INSTANT: Paint canvas fallback using keyword detection (synchronous, <1ms)
+  // 1. INSTANT: Paint canvas fallback using keyword detection (synchronous)
   var kwData=keywordDetect(paragraph,genre||'fantasy');
   var quickSd={env:kwData.env,props:kwData.props,holding:kwData.holding,pose:kwData.pose,
                mood:kwData.mood,weather:'clear',twoChars:kwData.twoChars,timeOfDay:kwData.timeOfDay};
-  paint(canvas,quickSd,genre||'fantasy');
+  try{paint(canvas,quickSd,genre||'fantasy');}catch(e){console.warn('[NEXUS] canvas paint err',e);}
 
-  // Fade out shimmer
-  shimmer.style.transition='opacity .5s';shimmer.style.opacity='0';
+  // Fade out shimmer to reveal canvas
+  shimmer.style.transition='opacity .5s';
+  shimmer.style.opacity='0';
   setTimeout(function(){if(shimmer.parentNode)shimmer.remove();},550);
 
-  // 2. ASYNC: Extract scene with Claude, build prompt, fetch Pollinations image
+  // 2. ASYNC: Extract scene → build prompt → fetch Pollinations AI image
   extractScene(paragraph,genre||'fantasy',tone||'balanced').then(function(sd){
     if(!sd)sd=quickSd;
     panel._sd=sd;panel._genre=genre||'fantasy';
 
-    // Add mood tag to caption
+    // Mood tag in caption
     if(sd.mood){
       var tag=document.createElement('span');
       tag.className='nx-scene-mood-tag';
@@ -2698,30 +2706,36 @@ async function renderScene(paragraph,genre,tone,insertAfterEl){
       caption.appendChild(tag);
     }
 
-    // Build Pollinations prompt from scene data
+    // Build illustration prompt
     var prompt=buildIllustrationPrompt(paragraph,genre||'fantasy',sd);
-    var imgW=Math.min(W*2,1280);  // request 2x for retina
-    var imgH=Math.round(imgW*9/16);
-    var url=buildPollinationsUrl(prompt,imgW,imgH);
 
-    // Load the AI image
+    // Use FIXED safe dimensions for Pollinations (never 0)
+    var aiW=832, aiH=468;  // 16:9 at good quality
+    var url=buildPollinationsUrl(prompt,aiW,aiH);
+
+    // Track load timeout — if Pollinations takes >25s, assume failure
+    var loadTimeout=setTimeout(function(){
+      loadingDot.style.display='none';
+    },25000);
+
     img.onload=function(){
+      clearTimeout(loadTimeout);
       img.style.opacity='1';
       loadingDot.style.display='none';
-      // Optionally update canvas to match for expand view
       panel._aiUrl=url;
     };
     img.onerror=function(){
-      // Pollinations failed — canvas fallback already showing, just hide loader
+      clearTimeout(loadTimeout);
       loadingDot.style.display='none';
-      console.log('[NEXUS] Pollinations unavailable, using canvas illustration');
+      console.log('[NEXUS] Pollinations unavailable — canvas illustration active');
     };
-    // Set src to trigger load (Pollinations generates on GET)
+
     img.src=url;
 
-  }).catch(function(){
+  }).catch(function(e){
     panel._sd=quickSd;panel._genre=genre||'fantasy';
     loadingDot.style.display='none';
+    console.warn('[NEXUS] extractScene error', e);
   });
 
   return panel;
