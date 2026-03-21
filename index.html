@@ -270,7 +270,7 @@ select.inp{background:var(--surface);padding:13px 12px;border:1px solid var(--bo
 .btitle{font-family:var(--font-display);font-size:22px;font-weight:600;color:var(--ink);letter-spacing:-.01em;font-style:italic;}
 .moodchip{font-family:var(--font-mono);font-size:8px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border:1px solid var(--border);color:var(--ink4);}
 .echo{font-family:var(--font-display);font-size:15px;font-style:italic;color:var(--ink3);padding:10px 0 10px 18px;margin:6px 0 14px;border-left:1px solid var(--ochre);}
-.spara{font-family:var(--font-display);font-size:clamp(20px,2.6vw,26px);line-height:1.9;color:var(--ink);letter-spacing:.01em;padding:8px 0 18px;cursor:pointer;letter-spacing:-.01em;font-weight:300;}
+.spara{font-family:var(--font-display);font-size:clamp(20px,2.6vw,26px);line-height:1.9;color:var(--ink);letter-spacing:-.01em;padding:8px 0 18px;cursor:pointer;font-weight:300;}
 .spara::first-letter{font-family:var(--font-title);font-size:4.5em;line-height:.75;float:left;margin:8px 10px 0 0;color:#8898b8;letter-spacing:.02em;}
 
 /* ═══════════════════════════════════════════════════
@@ -297,8 +297,8 @@ select.inp{background:var(--surface);padding:13px 12px;border:1px solid var(--bo
 @keyframes nxShimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
 @keyframes nxPulse{0%,100%{opacity:.4;transform:scale(1);}50%{opacity:1;transform:scale(1.3);}}
 .nx-scene-expanded{position:fixed!important;inset:0!important;z-index:500!important;width:100vw!important;height:100vh!important;aspect-ratio:unset!important;background:#0a0c14!important;cursor:zoom-out!important;margin:0!important;border:none!important;}
-.nx-scene-expanded canvas{width:100%!important;height:100%!important;object-fit:contain!important;}
-.nx-scene-expanded img{object-fit:contain!important;width:100%!important;height:100%!important;}
+.nx-scene-expanded canvas{width:100%!important;height:100%!important;object-fit:contain!important;z-index:1!important;}
+.nx-scene-expanded img{object-fit:contain!important;width:100%!important;height:100%!important;z-index:2!important;}
 .nx-scene-expanded .nx-scene-caption{opacity:1;}
 
 /* CHOICES */
@@ -940,7 +940,7 @@ function doLogin(){
 
 function guest(){loginU({email:'__guest__',name:'Guest',guest:true});}
 function loginU(u){CU=u;if(!u.guest){u.loginTime=Date.now();localStorage.setItem('nx_ses',JSON.stringify(u));touchStreak();}showPage('dash-page');rdash();}
-function doLogout(){CU=null;localStorage.removeItem('nx_ses');showPage('auth-page');showBottomNav(false);}
+function doLogout(){CU=null;G={genre:'',seed:'',title:'',chapter:1,choicesMade:0,choiceLog:[],messages:[],settings:{},startedAt:0};localStorage.removeItem('nx_ses');showPage('auth-page');showBottomNav(false);}
 function showForgot(){alert('Password reset: please re-create your account or contact support.');}
 
 /* ═══════════════════════════════════════════════════
@@ -1030,6 +1030,8 @@ var G={genre:'',seed:'',title:'',chapter:1,choicesMade:0,choiceLog:[],messages:[
 // Keyboard shortcuts: A/B/C to pick choices
 document.addEventListener('keydown',function(e){
   if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+  var gp=document.getElementById('game-page');
+  if(!gp||!gp.classList.contains('on'))return;  // only on game page
   var key=e.key.toUpperCase();
   if(['A','B','C'].indexOf(key)<0)return;
   var btns=document.querySelectorAll('.cbtn:not([disabled])');
@@ -1064,7 +1066,7 @@ function showToast(msg){var t=document.getElementById('autosave-toast');if(!t)re
 function setupGNav(){document.querySelector('.bottom-nav')&&document.querySelector('.bottom-nav').classList.add('hidden');var cc=GC[G.genre]||'#a0a8b8';var b=document.getElementById('gnBadge');b.textContent=G.genre.toUpperCase();b.style.color=cc;b.style.borderColor=cc;var ab=document.getElementById('gnAuthor');if(ab){var auth=(G.settings&&G.settings.customAuthor)||(AUTHOR_DB[G.genre]&&AUTHOR_DB[G.genre].name)||'Author';ab.textContent='à la '+auth;ab.style.color=cc;}updateProgress();var sb=document.getElementById('btnSave');if(sb)sb.style.display=(CU&&!CU.guest)?'inline-flex':'none';}
 function leavegame(){document.querySelector('.bottom-nav')&&document.querySelector('.bottom-nav').classList.remove('hidden');
   // Cancel any pending Pollinations loads
-  document.querySelectorAll('.nx-scene-panel img').forEach(function(img){img.src='';});stopSpeaking();if(CU&&!CU.guest&&G.chapter>1)saveGame(false);showPage('dash-page');rdash();setActiveNav('dash');}
+  document.querySelectorAll('.nx-scene-panel').forEach(function(p){if(p._abortCtrl){p._abortCtrl.abort();}var img=p.querySelector('img');if(img)img.src='';});stopSpeaking();if(CU&&!CU.guest&&(G.chapter>1||G.choicesMade>0))saveGame(false);showPage('dash-page');rdash();setActiveNav('dash');}
 
 var CHOICE_TAGS={aggressive:['attack','fight','confront','challenge','demand','force','strike','kill','flee','run'],clever:['trick','deceive','lie','sneak','steal','investigate','analyze','negotiate','bribe','distract','plan','hide'],vulnerable:['trust','tell','confess','ask','help','forgive','accept','surrender','share','admit','open','reach','comfort','stay']};
 function classifyChoice(text){var lower=text.toLowerCase();var scores={aggressive:0,clever:0,vulnerable:0};Object.keys(CHOICE_TAGS).forEach(function(tag){CHOICE_TAGS[tag].forEach(function(kw){if(lower.indexOf(kw)>-1)scores[tag]++;});});var best='vulnerable';var max=0;Object.keys(scores).forEach(function(k){if(scores[k]>max){max=scores[k];best=k;}});return best;}
@@ -1138,6 +1140,7 @@ function renderBeat(data,chosenText){
   updateProgress();refreshSummary();
   if(G.chapter>1&&G.chapter%5===0&&CU){saveGame(false);showToast('✓ Auto-saved Ch.'+G.chapter);}
   setTimeout(function(){para.scrollIntoView({behavior:'smooth',block:'start'});},60);
+  if(chosenText&&G.chapter>2)setTimeout(function(){fetchConsequences(chosenText,G.chapter-1);},600);
   typewrite(para,data.paragraph,function(){
     renderWorldMemoryStrip();
     if(data.isEnding){if(CU&&!CU.guest)saveGame(true);fetchEpilogue(data.paragraph,function(){doEnding(data);});}
@@ -1155,7 +1158,7 @@ function setLoad(on){document.getElementById('loadbox').style.display=on?'flex':
 
 var _prologueDone=false,_epilogueDone=false;
 function fetchPrologue(onDone){var av=AUTHOR_DB[G.genre]||AUTHOR_DB.romance;var author=(G.settings&&G.settings.customAuthor)||av.name;var sys='You are writing the PROLOGUE of a '+G.genre+' story in the style of '+author+'. Premise: "'+G.seed+'" Write a single atmospheric prologue paragraph (4-6 sentences). This is the world BEFORE the main story begins. Set the tone, hint at what is coming. Use the author\'s scenery style. No action yet. Respond with ONLY the paragraph text.';callClaude([{role:'user',content:'Write the prologue.'}],sys,250).then(function(text){if(!text){onDone();return;}renderPrologue(text.trim(),onDone);}).catch(function(){onDone();});}
-function renderPrologue(text,onDone){var log=document.getElementById('storyLog');if(!log){onDone();return;}var box=document.createElement('div');box.className='story-prologue';box.innerHTML='<div class="prologue-label">Prologue</div><div class="prologue-text" id="prologueText"></div>';log.appendChild(box);setTimeout(function(){box.scrollIntoView({behavior:'smooth',block:'start'});},60);var pText=document.getElementById('prologueText');typewrite(pText,text,function(){_prologueDone=true;setTimeout(onDone,900);});}
+function renderPrologue(text,onDone){var log=document.getElementById('storyLog');if(!log){onDone();return;}var box=document.createElement('div');box.className='story-prologue';box.innerHTML='<div class="prologue-label">Prologue</div><div class="prologue-text" id="prologueText"></div>';log.appendChild(box);setTimeout(function(){box.scrollIntoView({behavior:'smooth',block:'start'});},60);var pText=document.getElementById('prologueText');pText.classList.add('spara');typewrite(pText,text,function(){_prologueDone=true;setTimeout(onDone,900);});}
 function fetchEpilogue(endingParagraph,onDone){var av=AUTHOR_DB[G.genre]||AUTHOR_DB.romance;var author=(G.settings&&G.settings.customAuthor)||av.name;var sys='You are writing the EPILOGUE of a '+G.genre+' story in the style of '+author+'. The final chapter ended with: "'+endingParagraph+'" Write a single epilogue paragraph (3-5 sentences). Reflective and poetic. End with a final image. Respond with ONLY the paragraph text.';callClaude([{role:'user',content:'Write the epilogue.'}],sys,220).then(function(text){if(!text){onDone();return;}renderEpilogue(text.trim(),onDone);}).catch(function(){onDone();});}
 function renderEpilogue(text,onDone){var log=document.getElementById('storyLog');if(!log){onDone();return;}var sep=document.createElement('div');sep.className='bsep';sep.innerHTML='<span class="bch" style="color:var(--ochre)">Epilogue</span>';log.appendChild(sep);var box=document.createElement('div');box.className='story-epilogue';box.innerHTML='<div class="epilogue-label">The World After</div><div class="epilogue-text" id="epilogueText"></div><div class="epilogue-note">This story is complete. Your choices shaped every line of it.</div>';log.appendChild(box);setTimeout(function(){box.scrollIntoView({behavior:'smooth',block:'start'});},80);var eText=document.getElementById('epilogueText');typewrite(eText,text,function(){_epilogueDone=true;setTimeout(onDone,1200);});}
 
@@ -1188,7 +1191,7 @@ function initSummaryPanel(){var panel=document.getElementById('summaryPanel');if
 function renderSummaryStatic(){var genreLabel=cap(G.genre);var author=(G.settings&&G.settings.customAuthor)||(AUTHOR_DB[G.genre]&&AUTHOR_DB[G.genre].name)||genreLabel;var prem=document.getElementById('summaryPremise');if(prem)prem.innerHTML='<strong style="color:var(--ochre2)">'+genreLabel+'</strong> · <em>'+escHtml(author)+'</em><br><span style="opacity:.8">'+escHtml(G.seed||'')+'</span>';updateSummaryChoices();updateSummaryCurrentChapter();}
 function updateSummaryChoices(){var cl=G.choiceLog||[];var sec=document.getElementById('summaryChoicesSection');var list=document.getElementById('summaryChoicesList');if(!sec||!list)return;if(cl.length===0){sec.style.display='none';return;}sec.style.display='block';list.innerHTML='';cl.slice(-6).forEach(function(c,i){var idx=cl.length>6?cl.length-6+i+1:i+1;var item=document.createElement('div');item.className='summary-choice-item';item.innerHTML='<span class="summary-choice-num">Ch.'+idx+'</span><span>'+escHtml(c.text)+'</span>';list.appendChild(item);});}
 function updateSummaryCurrentChapter(){var sec=document.getElementById('summaryCurrentSection');var lbl=document.getElementById('summaryCurrentLabel');var txt=document.getElementById('summaryCurrentText');if(!sec||!lbl||!txt)return;sec.style.display='block';var maxCh=(G.settings&&G.settings.customCh)||25;lbl.textContent='Chapter '+G.chapter+' of '+maxCh;txt.textContent=G.chapter===1?'The story is just beginning.':(G.choiceLog&&G.choiceLog.length?'You chose to "'+G.choiceLog[G.choiceLog.length-1].text+'" — now at '+Math.round((G.chapter/maxCh)*100)+'% through the story.':'Chapter '+G.chapter+' of '+maxCh+'.');}
-function fetchSummaryOpening(){if(_summaryAIText)return;var genreLabel=cap(G.genre);var author=(G.settings&&G.settings.customAuthor)||(AUTHOR_DB[G.genre]&&AUTHOR_DB[G.genre].name)||genreLabel;var prompt='Write exactly 2 short friendly sentences (max 40 words) summarising this story:\nGenre: '+genreLabel+'\nAuthor style: '+author+'\nPremise: "'+G.seed+'"\nStart with "This is a [genre] story about..." No markdown.';callClaude([{role:'user',content:prompt}],'Write brief friendly story summaries in plain English.',120).then(function(text){if(!text)return;_summaryAIText=text.trim();var prem=document.getElementById('summaryPremise');if(prem){var genreLabel2=cap(G.genre);var author2=(G.settings&&G.settings.customAuthor)||(AUTHOR_DB[G.genre]&&AUTHOR_DB[G.genre].name)||genreLabel2;prem.innerHTML='<strong style="color:var(--ochre2)">'+genreLabel2+'</strong> · <em>'+escHtml(author2)+'</em><br><span style="opacity:.85;font-size:15px;">'+escHtml(_summaryAIText)+'</span>';}}).catch(function(){});}
+function fetchSummaryOpening(){if(_summaryAIText)return;var genreLabel=cap(G.genre);var author=(G.settings&&G.settings.customAuthor)||(AUTHOR_DB[G.genre]&&AUTHOR_DB[G.genre].name)||genreLabel;var prompt='Write exactly 2 short friendly sentences (max 40 words) summarising this story:\nGenre: '+genreLabel+'\nAuthor style: '+author+'\nPremise: "'+G.seed+'"\nStart with "This is a [genre] story about..." No markdown.';callClaude([{role:'user',content:prompt}],'Write brief friendly story summaries in plain English.',180).then(function(text){if(!text)return;_summaryAIText=text.trim();var prem=document.getElementById('summaryPremise');if(prem){var genreLabel2=cap(G.genre);var author2=(G.settings&&G.settings.customAuthor)||(AUTHOR_DB[G.genre]&&AUTHOR_DB[G.genre].name)||genreLabel2;prem.innerHTML='<strong style="color:var(--ochre2)">'+genreLabel2+'</strong> · <em>'+escHtml(author2)+'</em><br><span style="opacity:.85;font-size:15px;">'+escHtml(_summaryAIText)+'</span>';}}).catch(function(){});}
 function refreshSummary(){updateSummaryChoices();updateSummaryCurrentChapter();}
 
 /* VOICE (stub) */
@@ -1226,7 +1229,7 @@ function closeUserSettings(){var m=document.getElementById('userSettingsModal');
 function setUserSpeed(spd){localStorage.setItem('nx_speed',spd);if(spd==='normal')TW_SPEED=14;else if(spd==='turbo')TW_SPEED=4;else TW_SPEED=0;['Normal','Turbo','Instant'].forEach(function(s){var el=document.getElementById('speed'+s);if(el)el.className=(spd===s.toLowerCase())?'btn btn-p btn-sm':'btn btn-out btn-sm';});}
 
 var _origShowPage=showPage;
-showPage=function(id){_origShowPage(id);var noNav=['auth-page'];showBottomNav(noNav.indexOf(id)===-1);if(id==='dash-page')setActiveNav('dash');};
+showPage=function(id){_origShowPage(id);var noNav=['auth-page','game-page','wiz-page','end-page'];showBottomNav(noNav.indexOf(id)===-1);if(id==='dash-page')setActiveNav('dash');};
 
 /* INIT */
 (function(){
@@ -2565,27 +2568,103 @@ function buildIllustrationPrompt(paragraph,genre,sd){
   var pose=(sd&&sd.pose)||'standing';
   var weather=(sd&&sd.weather)||'clear';
   var twoChars=sd&&sd.twoChars;
-  var cleaned=paragraph.replace(/\s+/g,' ').slice(0,100).trim();
-  var envTag=ENV_TAGS[env]||'atmospheric interior';
-  if(sd&&sd.props&&sd.props.length){envTag=envTag+', '+sd.props.slice(0,3).join(', ');}
-  var charDesc=twoChars?('two figures facing each other, '+pose):('solitary figure, '+pose+(holding!=='none'?', holding '+holding:''));
-  var lightMap={fluorescent:'cold clinical lighting',candlelit:'warm candlelight',golden:'golden hour sunlight',moonlit:'silver moonlight',dramatic:'dramatic chiaroscuro',dim:'dim low light',ambient:'soft ambient lighting'};
-  var lightDesc=lightMap[(sd&&sd.lighting)||'ambient']||'cinematic lighting';
-  var moodTag=MOOD_TAGS[mood]||'atmospheric tension';
-  var styleTag=STYLE_TAGS[g]||STYLE_TAGS.fantasy;
-  var weatherTag=weather==='rain'?'heavy rain, wet reflections':weather==='snow'?'falling snow, winter light':weather==='fog'?'thick fog, mist':'';
-  return [cleaned,charDesc,envTag,lightDesc,moodTag,weatherTag,styleTag,'wide cinematic frame, detailed illustration, rich colors, no text, no watermark'].filter(Boolean).join(', ');
+
+  // -- SUBJECT (who/what) --
+  var subject;
+  if(twoChars){
+    subject='two people, '+pose+', facing each other';
+  } else {
+    subject='a person, '+pose;
+    if(holding!=='none') subject+=', holding a '+holding;
+  }
+
+  // -- SETTING (where) --
+  var settingMap={
+    living_room:'inside a cozy living room, warm interior lighting',
+    kitchen:'inside a modern kitchen, granite countertops, overhead lights',
+    bedroom:'inside a bedroom, soft bedside lamp, curtains',
+    cafe:'inside a warm cafe, wooden tables, espresso machine in background, chalkboard menu',
+    hospital:'inside a hospital corridor, fluorescent lights, linoleum floor, vending machine',
+    airport:'inside an airport terminal, large windows, departure boards, rows of seats, tarmac visible outside',
+    office:'inside a modern office, desk, computer screens, city view through window',
+    library:'inside a grand library, towering bookshelves floor to ceiling, reading lamps',
+    bar:'inside a dark bar, neon signs, bottles behind counter, bar stools',
+    restaurant:'inside an elegant restaurant, candlelit tables, white tablecloths',
+    courtroom:'inside a courtroom, wooden benches, judge\'s bench, high ceilings',
+    church:'inside a cathedral, stained glass windows, pews, altar',
+    forest:'in a dense atmospheric forest, shafts of light through trees',
+    castle:'at a dramatic medieval castle, stone towers, battlements, moody sky',
+    city:'on a city street at night, neon lights reflecting on wet pavement, tall buildings',
+    coast:'on a dramatic coastline, crashing ocean waves, rocky cliffs',
+    mountain:'on a mountain summit, dramatic sky, vast landscape below',
+    desert:'in a vast desert, sand dunes, harsh sun, heat shimmer',
+    cave:'inside a dark cave, glowing crystals, stalactites, mysterious light',
+    ruins:'among ancient stone ruins, overgrown with vines, atmospheric mist'
+  };
+  var setting=settingMap[env]||'in an atmospheric location';
+
+  // -- MOOD LIGHTING --
+  var lightingMap={
+    longing:'soft melancholy golden light, hazy atmosphere',
+    tension:'harsh dramatic shadows, high contrast lighting',
+    dread:'dark oppressive shadows, cold blue-grey light',
+    grief:'overcast muted light, desaturated colors',
+    hope:'warm golden light breaking through, uplifting',
+    warmth:'soft warm amber light, intimate and cozy',
+    wonder:'ethereal glowing light, magical atmosphere',
+    anger:'harsh red-orange lighting, intense shadows',
+    despair:'cold grey light, heavy shadows',
+    love:'warm rose-gold light, soft and romantic'
+  };
+  var lighting=lightingMap[mood]||'cinematic dramatic lighting';
+
+  // -- WEATHER --
+  var weatherStr='';
+  if(weather==='rain') weatherStr='heavy rain falling, wet reflections on ground, ';
+  else if(weather==='snow') weatherStr='snow falling gently, winter atmosphere, ';
+  else if(weather==='fog') weatherStr='thick atmospheric fog and mist, ';
+
+  // -- GENRE STYLE --
+  var styleMap={
+    romance:'romantic storybook illustration, soft painterly style, warm tones, detailed characters',
+    thriller:'dark thriller illustration, noir atmosphere, high contrast, gritty realism',
+    horror:'dark horror illustration, gothic, unsettling atmosphere, desaturated palette',
+    scifi:'science fiction illustration, futuristic, neon lighting, detailed technical art',
+    mystery:'mystery noir illustration, moody shadows, sepia tones, atmospheric',
+    noir:'film noir illustration, 1940s style, black and white with gold accents',
+    supernatural:'supernatural dark fantasy illustration, ethereal glowing effects, mysterious',
+    historical:'historical period illustration, painterly, detailed costumes and architecture',
+    isekai:'vibrant isekai fantasy illustration, anime-influenced, magical world, detailed',
+    fantasy:'epic fantasy illustration, painterly, rich colors, detailed magical world',
+    survival:'gritty survival illustration, realistic, harsh environment, worn details',
+    random:'cinematic illustrated scene, detailed, painterly, professional quality'
+  };
+  var style=styleMap[g]||'detailed cinematic illustration';
+
+  // Build final FLUX prompt — structured for best results
+  // Format: [style], [subject], [setting], [lighting/weather], [quality tags]
+  var parts=[
+    style,
+    subject,
+    setting,
+    weatherStr+lighting,
+    'ultra detailed, high quality, sharp focus, professional digital art, 16:9 composition'
+  ];
+
+  return parts.join(', ');
 }
 
-function buildPollinationsUrl(prompt,width,height){
+function buildPollinationsUrl(prompt,width,height,seed){
   var encoded=encodeURIComponent(prompt);
-  // Use flux model, no watermark (nologo), safe content
+  var s=seed||Math.floor(Math.random()*999999);
+  // flux model, enhance=true improves short prompts, private keeps off public feed
   return 'https://image.pollinations.ai/prompt/'+encoded
     +'?width='+(width||832)
     +'&height='+(height||468)
     +'&model=flux'
-    +'&nologo=true'
-    +'&seed='+Math.floor(Math.random()*999999);
+    +'&enhance=true'
+    +'&nofeed=true'
+    +'&seed='+s;
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -2617,7 +2696,7 @@ function buildPanel(genre){
 
   // Small pulsing dot = AI generating
   var loadingDot=document.createElement('div');
-  loadingDot.style.cssText='position:absolute;bottom:8px;right:10px;display:flex;align-items:center;gap:5px;z-index:5;pointer-events:none;font-family:var(--font-mono);font-size:8px;color:rgba(160,168,184,.5);letter-spacing:.06em;text-transform:uppercase;';loadingDot.innerHTML='<span style="width:5px;height:5px;border-radius:50%;background:rgba(160,168,184,.7);animation:nxPulse 1s ease-in-out infinite;display:inline-block;margin-right:4px;"></span>AI Illustrating…';
+  loadingDot.style.cssText='position:absolute;bottom:8px;right:10px;display:flex;align-items:center;gap:5px;z-index:10;pointer-events:none;font-family:var(--font-mono);font-size:8px;color:rgba(160,168,184,.5);letter-spacing:.06em;text-transform:uppercase;';loadingDot.innerHTML='<span style="width:5px;height:5px;border-radius:50%;background:rgba(160,168,184,.7);animation:nxPulse 1s ease-in-out infinite;display:inline-block;margin-right:4px;"></span>AI Illustrating…';
 
   panel.appendChild(canvas);
   panel.appendChild(img);
@@ -2702,31 +2781,55 @@ async function renderScene(paragraph,genre,tone,insertAfterEl){
     // Track load timeout — if Pollinations takes >25s, assume failure
     var loadTimeout=setTimeout(function(){
       loadingDot.style.display='none';
-    },25000);
+      console.log('[NEXUS] Load timeout after 40s');
+    },40000);  // 40s timeout - Pollinations can take 15-20s
 
-    var _retried=false;
-    img.onload=function(){
-      clearTimeout(loadTimeout);
-      img.style.opacity='1';
-      loadingDot.style.display='none';
-      panel._aiUrl=url;
-    };
-    img.onerror=function(){
-      clearTimeout(loadTimeout);
-      if(!_retried){
-        // Retry once with a fresh seed after 2s
-        _retried=true;
-        setTimeout(function(){
-          var retryUrl=buildPollinationsUrl(prompt,aiW,aiH);
-          img.src=retryUrl;
-        },2000);
-      } else {
-        loadingDot.style.display='none';
-        console.log('[NEXUS] Pollinations unavailable — canvas illustration active');
-      }
-    };
+    // Use fetch+blob for reliable loading (avoids img.onerror quirks)
+    var _blobUrl=null;
+    function cleanupBlob(){if(_blobUrl){URL.revokeObjectURL(_blobUrl);_blobUrl=null;}}
 
-    img.src=url;
+    function loadAIImage(imageUrl,attempt){
+      // Use AbortController to cancel if panel removed
+      var _ctrl=new AbortController();
+      panel._abortCtrl=_ctrl;
+      fetch(imageUrl,{signal:_ctrl.signal})
+        .then(function(resp){
+          if(!resp.ok)throw new Error('HTTP '+resp.status);
+          return resp.blob();
+        })
+        .then(function(blob){
+          if(!blob.type||!blob.type.startsWith('image/')){
+            throw new Error('Not an image');
+          }
+          cleanupBlob();
+          _blobUrl=URL.createObjectURL(blob);
+          img.onload=function(){
+            clearTimeout(loadTimeout);
+            img.style.opacity='1';
+            loadingDot.style.display='none';
+            panel._aiUrl=_blobUrl;
+          };
+          img.src=_blobUrl;
+        })
+        .catch(function(err){
+          if(err.name==='AbortError')return;  // Panel removed, ignore
+          console.warn('[NEXUS] Pollinations attempt '+(attempt||1)+' failed:',err.message);
+          if((attempt||1)<3){
+            // Retry up to 3 times with new seed
+            var delay=attempt===1?2000:4000;
+            setTimeout(function(){
+              var retryUrl=buildPollinationsUrl(prompt,aiW,aiH);
+              loadAIImage(retryUrl,(attempt||1)+1);
+            },delay);
+          } else {
+            clearTimeout(loadTimeout);
+            loadingDot.style.display='none';
+            console.log('[NEXUS] All attempts failed — canvas illustration shown');
+          }
+        });
+    }
+
+    loadAIImage(url,1);
 
   }).catch(function(e){
     panel._sd=quickSd;panel._genre=genre||'fantasy';
