@@ -1065,7 +1065,7 @@ function updateProgress(){
 function showToast(msg){var t=document.getElementById('autosave-toast');if(!t)return;t.textContent=msg;t.style.display='block';t.classList.remove('autosave-out');clearTimeout(t._timer);t._timer=setTimeout(function(){t.classList.add('autosave-out');setTimeout(function(){t.style.display='none';},400);},2200);}
 function setupGNav(){document.querySelector('.bottom-nav')&&document.querySelector('.bottom-nav').classList.add('hidden');var cc=GC[G.genre]||'#a0a8b8';var b=document.getElementById('gnBadge');b.textContent=G.genre.toUpperCase();b.style.color=cc;b.style.borderColor=cc;var ab=document.getElementById('gnAuthor');if(ab){var auth=(G.settings&&G.settings.customAuthor)||(AUTHOR_DB[G.genre]&&AUTHOR_DB[G.genre].name)||'Author';ab.textContent='à la '+auth;ab.style.color=cc;}updateProgress();var sb=document.getElementById('btnSave');if(sb)sb.style.display=(CU&&!CU.guest)?'inline-flex':'none';}
 function leavegame(){document.querySelector('.bottom-nav')&&document.querySelector('.bottom-nav').classList.remove('hidden');
-  // Cancel any pending Pollinations loads
+  // Cancel any pending Fal.AI image requests
   document.querySelectorAll('.nx-scene-panel').forEach(function(p){if(p._abortCtrl){p._abortCtrl.abort();}var img=p.querySelector('img');if(img)img.src='';});stopSpeaking();if(CU&&!CU.guest&&(G.chapter>1||G.choicesMade>0))saveGame(false);showPage('dash-page');rdash();setActiveNav('dash');}
 
 var CHOICE_TAGS={aggressive:['attack','fight','confront','challenge','demand','force','strike','kill','flee','run'],clever:['trick','deceive','lie','sneak','steal','investigate','analyze','negotiate','bribe','distract','plan','hide'],vulnerable:['trust','tell','confess','ask','help','forgive','accept','surrender','share','admit','open','reach','comfort','stay']};
@@ -2519,9 +2519,10 @@ function paint(canvas, sceneData, genre){
 }
 
 /* ════════════════════════════════════════════════════════════
-   POLLINATIONS AI — Free FLUX illustration engine
-   https://image.pollinations.ai — no API key, no signup
-   Builds a detailed illustrated prompt from story paragraph
+   FAL.AI FLUX ILLUSTRATION ENGINE
+   Routes through /api/image Vercel serverless function
+   FAL_KEY env var kept server-side — never exposed to browser
+   Model: fal-ai/flux/schnell — 2-4s generation, $0.003/image
 ════════════════════════════════════════════════════════════ */
 
 var STYLE_TAGS={
@@ -2654,17 +2655,21 @@ function buildIllustrationPrompt(paragraph,genre,sd){
   return parts.join(', ');
 }
 
-function buildPollinationsUrl(prompt,width,height,seed){
-  var encoded=encodeURIComponent(prompt);
-  var s=seed||Math.floor(Math.random()*999999);
-  // flux model, enhance=true improves short prompts, private keeps off public feed
-  return 'https://image.pollinations.ai/prompt/'+encoded
-    +'?width='+(width||832)
-    +'&height='+(height||468)
-    +'&model=flux'
-    +'&enhance=true'
-    +'&nofeed=true'
-    +'&seed='+s;
+function buildFalRequest(prompt,width,height){
+  // Routes through /api/image Vercel serverless function
+  // which holds the FAL_KEY securely server-side
+  return {
+    url: '/api/image',
+    body: JSON.stringify({
+      prompt: prompt,
+      image_size: 'landscape_16_9',
+      num_inference_steps: 4,
+      num_images: 1,
+      enable_safety_checker: true,
+      output_format: 'jpeg',
+      seed: Math.floor(Math.random()*999999)
+    })
+  };
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -2725,7 +2730,7 @@ function buildPanel(genre){
 }
 
 /* ════════════════════════════════════════════════════════════
-   RENDER SCENE — Pollinations AI + canvas fallback
+   RENDER SCENE — Fal.AI FLUX + canvas fallback
 ════════════════════════════════════════════════════════════ */
 async function renderScene(paragraph,genre,tone,insertAfterEl){
   if(!paragraph||!insertAfterEl)return;
@@ -2774,62 +2779,69 @@ async function renderScene(paragraph,genre,tone,insertAfterEl){
     // Build illustration prompt
     var prompt=buildIllustrationPrompt(paragraph,genre||'fantasy',sd);
 
-    // Use FIXED safe dimensions for Pollinations (never 0)
-    var aiW=832, aiH=468;  // 16:9 at good quality
-    var url=buildPollinationsUrl(prompt,aiW,aiH);
+    // Fal.AI request config (routed through /api/image serverless fn)
+    var falReq=buildFalRequest(prompt);
 
-    // Track load timeout — if Pollinations takes >25s, assume failure
+    // 8s timeout for Fal.AI (much faster than Pollinations)
     var loadTimeout=setTimeout(function(){
       loadingDot.style.display='none';
-      console.log('[NEXUS] Load timeout after 40s');
-    },40000);  // 40s timeout - Pollinations can take 15-20s
+      console.log('[NEXUS] Fal.AI timeout after 20s — canvas shown');
+    },20000);
 
-    // Use fetch+blob for reliable loading (avoids img.onerror quirks)
+    // AbortController for cleanup
     var _blobUrl=null;
+    var _ctrl=new AbortController();
+    panel._abortCtrl=_ctrl;
     function cleanupBlob(){if(_blobUrl){URL.revokeObjectURL(_blobUrl);_blobUrl=null;}}
 
-    function loadAIImage(imageUrl,attempt){
-      // Use AbortController to cancel if panel removed
-      var _ctrl=new AbortController();
-      panel._abortCtrl=_ctrl;
-      fetch(imageUrl,{signal:_ctrl.signal})
-        .then(function(resp){
-          if(!resp.ok)throw new Error('HTTP '+resp.status);
-          return resp.blob();
-        })
-        .then(function(blob){
-          if(!blob.type||!blob.type.startsWith('image/')){
-            throw new Error('Not an image');
-          }
-          cleanupBlob();
-          _blobUrl=URL.createObjectURL(blob);
-          img.onload=function(){
-            clearTimeout(loadTimeout);
-            img.style.opacity='1';
-            loadingDot.style.display='none';
-            panel._aiUrl=_blobUrl;
-          };
-          img.src=_blobUrl;
-        })
-        .catch(function(err){
-          if(err.name==='AbortError')return;  // Panel removed, ignore
-          console.warn('[NEXUS] Pollinations attempt '+(attempt||1)+' failed:',err.message);
-          if((attempt||1)<3){
-            // Retry up to 3 times with new seed
-            var delay=attempt===1?2000:4000;
-            setTimeout(function(){
-              var retryUrl=buildPollinationsUrl(prompt,aiW,aiH);
-              loadAIImage(retryUrl,(attempt||1)+1);
-            },delay);
-          } else {
-            clearTimeout(loadTimeout);
-            loadingDot.style.display='none';
-            console.log('[NEXUS] All attempts failed — canvas illustration shown');
-          }
-        });
+    function loadFalImage(attempt){
+      fetch(falReq.url,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:falReq.body,
+        signal:_ctrl.signal
+      })
+      .then(function(resp){
+        if(!resp.ok)throw new Error('HTTP '+resp.status);
+        return resp.json();
+      })
+      .then(function(data){
+        // Fal.AI returns {images:[{url:'...'}]}
+        var imageUrl=data&&data.images&&data.images[0]&&data.images[0].url;
+        if(!imageUrl)throw new Error('No image URL in response');
+        // Fetch the actual image as blob for reliable display
+        return fetch(imageUrl,{signal:_ctrl.signal});
+      })
+      .then(function(resp){
+        if(!resp.ok)throw new Error('Image fetch HTTP '+resp.status);
+        return resp.blob();
+      })
+      .then(function(blob){
+        cleanupBlob();
+        _blobUrl=URL.createObjectURL(blob);
+        img.onload=function(){
+          clearTimeout(loadTimeout);
+          img.style.opacity='1';
+          loadingDot.style.display='none';
+          panel._aiUrl=_blobUrl;
+        };
+        img.src=_blobUrl;
+      })
+      .catch(function(err){
+        if(err.name==='AbortError')return;
+        console.warn('[NEXUS] Fal.AI attempt '+(attempt||1)+' failed:',err.message);
+        if((attempt||1)<2){
+          // One retry after 1s
+          setTimeout(function(){loadFalImage((attempt||1)+1);},1000);
+        } else {
+          clearTimeout(loadTimeout);
+          loadingDot.style.display='none';
+          console.log('[NEXUS] Fal.AI unavailable — canvas illustration shown');
+        }
+      });
     }
 
-    loadAIImage(url,1);
+    loadFalImage(1);
 
   }).catch(function(e){
     panel._sd=quickSd;panel._genre=genre||'fantasy';
