@@ -2519,10 +2519,10 @@ function paint(canvas, sceneData, genre){
 }
 
 /* ════════════════════════════════════════════════════════════
-   FAL.AI FLUX ILLUSTRATION ENGINE
+   GEMINI IMAGE GENERATION ENGINE
    Routes through /api/image Vercel serverless function
-   FAL_KEY env var kept server-side — never exposed to browser
-   Model: fal-ai/flux/schnell — 2-4s generation, $0.003/image
+   GEMINI_API_KEY kept server-side (same key as story generation)
+   Model: gemini-3.1-flash-image-preview — 3-6s, $0.045/image free tier avail
 ════════════════════════════════════════════════════════════ */
 
 var STYLE_TAGS={
@@ -2655,19 +2655,13 @@ function buildIllustrationPrompt(paragraph,genre,sd){
   return parts.join(', ');
 }
 
-function buildFalRequest(prompt,width,height){
+function buildGeminiRequest(prompt){
   // Routes through /api/image Vercel serverless function
-  // which holds the FAL_KEY securely server-side
+  // GEMINI_API_KEY is held server-side — same key as story generation
   return {
     url: '/api/image',
     body: JSON.stringify({
-      prompt: prompt,
-      image_size: 'landscape_16_9',
-      num_inference_steps: 4,
-      num_images: 1,
-      enable_safety_checker: true,
-      output_format: 'jpeg',
-      seed: Math.floor(Math.random()*999999)
+      prompt: prompt
     })
   };
 }
@@ -2784,14 +2778,14 @@ async function renderScene(paragraph,genre,tone,insertAfterEl){
     // Build illustration prompt
     var prompt=buildIllustrationPrompt(paragraph,genre||'fantasy',sd);
 
-    // Fal.AI request config (routed through /api/image serverless fn)
-    var falReq=buildFalRequest(prompt);
+    // Gemini image request config (routed through /api/image serverless fn)
+    var geminiReq=buildGeminiRequest(prompt);
 
-    // 8s timeout for Fal.AI (much faster than Pollinations)
+    // Timeout for Gemini image generation (3-6s typical)
     var loadTimeout=setTimeout(function(){
       loadingDot.style.display='none';
-      console.log('[NEXUS] Fal.AI timeout after 20s — canvas shown');
-    },20000);
+      console.log('[NEXUS] Gemini image timeout after 25s — canvas shown');
+    },25000);
 
     // AbortController for cleanup
     var _blobUrl=null;
@@ -2799,11 +2793,11 @@ async function renderScene(paragraph,genre,tone,insertAfterEl){
     panel._abortCtrl=_ctrl;
     function cleanupBlob(){if(_blobUrl){URL.revokeObjectURL(_blobUrl);_blobUrl=null;}}
 
-    function loadFalImage(attempt){
-      fetch(falReq.url,{
+    function loadGeminiImage(attempt){
+      fetch(geminiReq.url,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:falReq.body,
+        body:geminiReq.body,
         signal:_ctrl.signal
       })
       .then(function(resp){
@@ -2811,17 +2805,13 @@ async function renderScene(paragraph,genre,tone,insertAfterEl){
         return resp.json();
       })
       .then(function(data){
-        // Fal.AI returns {images:[{url:'...'}]}
-        var imageUrl=data&&data.images&&data.images[0]&&data.images[0].url;
-        if(!imageUrl)throw new Error('No image URL in response');
-        // Fetch the actual image as blob for reliable display
-        return fetch(imageUrl,{signal:_ctrl.signal});
-      })
-      .then(function(resp){
-        if(!resp.ok)throw new Error('Image fetch HTTP '+resp.status);
-        return resp.blob();
-      })
-      .then(function(blob){
+        // Server returns {imageData:'base64...', mimeType:'image/png'}
+        if(!data.imageData)throw new Error('No image data in response');
+        // Convert base64 to blob URL
+        var byteChars=atob(data.imageData);
+        var byteArr=new Uint8Array(byteChars.length);
+        for(var i=0;i<byteChars.length;i++)byteArr[i]=byteChars.charCodeAt(i);
+        var blob=new Blob([byteArr],{type:data.mimeType||'image/png'});
         cleanupBlob();
         _blobUrl=URL.createObjectURL(blob);
         img.onload=function(){
@@ -2834,20 +2824,18 @@ async function renderScene(paragraph,genre,tone,insertAfterEl){
       })
       .catch(function(err){
         if(err.name==='AbortError')return;
-        console.warn('[NEXUS] Fal.AI attempt '+(attempt||1)+' failed:',err.message);
+        console.warn('[NEXUS] Gemini image attempt '+(attempt||1)+' failed:',err.message);
         if((attempt||1)<2){
-          // One retry after 1s
-          setTimeout(function(){loadFalImage((attempt||1)+1);},1000);
+          setTimeout(function(){loadGeminiImage((attempt||1)+1);},1500);
         } else {
           clearTimeout(loadTimeout);
           loadingDot.style.display='none';
-          console.log('[NEXUS] Fal.AI unavailable — canvas illustration shown');
-          // Canvas fallback is already painted and visible — just hide the dot
+          console.log('[NEXUS] Gemini image unavailable — canvas illustration shown');
         }
       });
     }
 
-    loadFalImage(1);
+    loadGeminiImage(1);
 
   }).catch(function(e){
     panel._sd=quickSd;panel._genre=genre||'fantasy';
