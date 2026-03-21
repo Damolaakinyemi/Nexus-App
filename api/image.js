@@ -1,73 +1,72 @@
-// api/image.js — Fal.AI FLUX Schnell image generation
-// Place this file at /api/image.js in your Vercel project
-// Set FAL_KEY environment variable in Vercel dashboard
+// api/image.js — Gemini image generation for NEXUS
+// Place at /api/image.js in your Vercel project root
+// Uses the SAME GEMINI_API_KEY as /api/story.js — no new key needed!
+// Model: gemini-3.1-flash-image-preview ($0.045/image, free tier: 500/day)
 
 export default async function handler(req, res) {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const FAL_KEY = process.env.FAL_KEY;
-  if (!FAL_KEY) {
-    return res.status(500).json({ error: 'FAL_KEY not configured on server' });
+  const API_KEY = process.env.GEMINI_API_KEY;
+  if (!API_KEY) {
+    return res.status(500).json({ error: 'GEMINI_API_KEY not configured on server' });
+  }
+
+  const { prompt } = req.body;
+  if (!prompt || typeof prompt !== 'string') {
+    return res.status(400).json({ error: 'prompt is required' });
   }
 
   try {
-    const {
-      prompt,
-      image_size = 'landscape_16_9',
-      num_inference_steps = 4,
-      num_images = 1,
-      enable_safety_checker = true,
-      output_format = 'jpeg',
-      seed
-    } = req.body;
+    const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent';
 
-    if (!prompt || typeof prompt !== 'string') {
-      return res.status(400).json({ error: 'prompt is required' });
-    }
-
-    // Call Fal.AI FLUX Schnell — fastest, cheapest, great quality
-    const falRes = await fetch('https://fal.run/fal-ai/flux/schnell', {
+    const geminiRes = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Key ${FAL_KEY}`
+        'x-goog-api-key': API_KEY
       },
       body: JSON.stringify({
-        prompt: prompt.slice(0, 2000), // Fal.AI prompt limit
-        image_size,
-        num_inference_steps,
-        num_images,
-        enable_safety_checker,
-        output_format,
-        ...(seed && { seed })
+        contents: [{
+          parts: [{ text: prompt.slice(0, 2000) }]
+        }],
+        generationConfig: {
+          responseModalities: ['TEXT', 'IMAGE']
+        }
       })
     });
 
-    if (!falRes.ok) {
-      const errText = await falRes.text();
-      console.error('[Fal.AI] Error:', falRes.status, errText);
-      return res.status(falRes.status).json({
-        error: `Fal.AI error: ${falRes.status}`,
+    if (!geminiRes.ok) {
+      const errText = await geminiRes.text();
+      console.error('[Gemini Image] Error:', geminiRes.status, errText.slice(0, 300));
+      return res.status(geminiRes.status).json({
+        error: `Gemini API error: ${geminiRes.status}`,
         detail: errText.slice(0, 200)
       });
     }
 
-    const data = await falRes.json();
+    const data = await geminiRes.json();
 
-    // Return exactly what client expects: { images: [{ url: '...' }] }
+    // Find the image part in the response
+    const parts = data?.candidates?.[0]?.content?.parts || [];
+    const imagePart = parts.find(p => p.inlineData && p.inlineData.mimeType?.startsWith('image/'));
+
+    if (!imagePart) {
+      console.error('[Gemini Image] No image in response:', JSON.stringify(data).slice(0, 300));
+      return res.status(502).json({ error: 'Gemini returned no image' });
+    }
+
+    // Return base64 image data + mime type to client
     return res.status(200).json({
-      images: data.images || [],
-      seed: data.seed,
-      prompt: data.prompt
+      imageData: imagePart.inlineData.data,
+      mimeType: imagePart.inlineData.mimeType
     });
 
   } catch (err) {
-    console.error('[Fal.AI] Server error:', err);
+    console.error('[Gemini Image] Server error:', err);
     return res.status(500).json({ error: err.message });
   }
 }
