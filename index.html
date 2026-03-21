@@ -247,7 +247,7 @@ select.inp{background:var(--surface);padding:13px 12px;border:1px solid var(--bo
 .gn-ch{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink4);}
 .gn-r{display:flex;align-items:center;gap:7px;}
 .game-layout{display:flex;max-width:1100px;margin:0 auto;width:100%;}
-.game-main{flex:1;min-width:0;padding:24px 28px calc(96px + var(--safe-bottom));}
+.game-main{flex:1;min-width:0;width:100%;padding:24px 28px calc(96px + var(--safe-bottom));}
 .choice-sidebar{width:260px;flex-shrink:0;padding:20px;border-left:1px solid var(--border);position:sticky;top:52px;max-height:calc(100vh - 52px);overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
 @media(max-width:860px){.choice-sidebar{display:none;}}
 .timeline-item{padding:10px 0;border-bottom:1px solid var(--border);}
@@ -286,7 +286,7 @@ select.inp{background:var(--surface);padding:13px 12px;border:1px solid var(--bo
 ═══════════════════════════════════════════════════ */
 .nx-scene-panel{width:calc(100% + 56px);margin-left:-28px;margin-right:-28px;aspect-ratio:16/9;min-height:200px;position:relative;overflow:hidden;background:#0a0c14;cursor:zoom-in;border:1px solid rgba(160,168,184,.15);margin-top:6px;margin-bottom:6px;}
 @media(max-width:600px){.nx-scene-panel{width:calc(100% + 40px);margin-left:-20px;margin-right:-20px;}}
-.nx-scene-panel canvas{position:absolute;inset:0;width:100%;height:100%;}
+.nx-scene-panel canvas{position:absolute;inset:0;width:100%;height:100%;z-index:1;}
 .nx-scene-panel img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .9s ease;}
 
 .nx-scene-caption{position:absolute;bottom:0;left:0;right:0;padding:32px 12px 10px;background:linear-gradient(to top,rgba(14,16,24,.88) 0%,transparent 100%);display:flex;align-items:flex-end;justify-content:space-between;opacity:0;transition:opacity .3s;pointer-events:none;}
@@ -2683,21 +2683,21 @@ function buildPanel(genre){
 
   // Canvas for instant fallback illustration
   var canvas=document.createElement('canvas');
-  canvas.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;display:block;';
+  canvas.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;display:block;z-index:1;';
 
   // AI image element (sits on top of canvas once loaded)
   var img=document.createElement('img');
-  img.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .9s ease;display:block;';
+  img.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .9s ease;display:block;z-index:2;';
   img.alt='Story illustration';
 
   // Caption bar
   var caption=document.createElement('div');
-  caption.className='nx-scene-caption';
+  caption.className='nx-scene-caption';caption.style.zIndex='4';
   caption.innerHTML='<span class="nx-scene-label">NEXUS · '+(genre||'').toUpperCase()+'</span>';
 
   // Shimmer loading overlay
   var shimmer=document.createElement('div');
-  shimmer.className='nx-scene-shimmer';
+  shimmer.className='nx-scene-shimmer';shimmer.style.zIndex='3';
 
   // Small pulsing dot = AI generating
   var loadingDot=document.createElement('div');
@@ -2742,13 +2742,18 @@ async function renderScene(paragraph,genre,tone,insertAfterEl){
   if(insertAfterEl.nextSibling)insertAfterEl.parentNode.insertBefore(panel,insertAfterEl.nextSibling);
   else insertAfterEl.parentNode.appendChild(panel);
 
-  // Wait TWO frames so the browser calculates layout and aspect-ratio kicks in
-  await new Promise(function(r){requestAnimationFrame(function(){requestAnimationFrame(r);});});
+  // Wait THREE frames so browser fully calculates layout + aspect-ratio
+  await new Promise(function(r){requestAnimationFrame(function(){requestAnimationFrame(function(){requestAnimationFrame(r);});});});
 
   // Get actual rendered dimensions — fall back to safe defaults if layout not ready yet
-  var W=Math.floor(panel.offsetWidth)||640;
-  if(W<10)W=640;
-  var H=Math.floor(W*9/16);  // Always derive H from W for correct 16:9
+  var W=Math.floor(panel.offsetWidth)||0;
+  if(W<10){
+    // Fallback: measure game-main or use viewport
+    var gm=document.querySelector('.game-main');
+    W=gm?Math.floor(gm.offsetWidth-56):Math.floor(window.innerWidth*0.6);
+    if(W<100)W=640;
+  }
+  var H=Math.floor(W*9/16);
 
   canvas.width=W;canvas.height=H;
 
@@ -2756,12 +2761,12 @@ async function renderScene(paragraph,genre,tone,insertAfterEl){
   var kwData=keywordDetect(paragraph,genre||'fantasy');
   var quickSd={env:kwData.env,props:kwData.props,holding:kwData.holding,pose:kwData.pose,
                mood:kwData.mood,weather:'clear',twoChars:kwData.twoChars,timeOfDay:kwData.timeOfDay};
-  try{paint(canvas,quickSd,genre||'fantasy');}catch(e){console.warn('[NEXUS] canvas paint err',e);}
+  try{paint(canvas,quickSd,genre||'fantasy');}catch(e){console.error('[NEXUS] canvas paint FAILED:',e.message,e.stack);}
 
   // Fade out shimmer to reveal canvas
   shimmer.style.transition='opacity .5s';
   shimmer.style.opacity='0';
-  setTimeout(function(){if(shimmer.parentNode)shimmer.remove();},550);
+  setTimeout(function(){if(shimmer.parentNode){shimmer.style.display='none';shimmer.remove();}},550);
 
   // 2. ASYNC: Extract scene → build prompt → fetch Pollinations AI image
   extractScene(paragraph,genre||'fantasy',tone||'balanced').then(function(sd){
@@ -2837,6 +2842,7 @@ async function renderScene(paragraph,genre,tone,insertAfterEl){
           clearTimeout(loadTimeout);
           loadingDot.style.display='none';
           console.log('[NEXUS] Fal.AI unavailable — canvas illustration shown');
+          // Canvas fallback is already painted and visible — just hide the dot
         }
       });
     }
