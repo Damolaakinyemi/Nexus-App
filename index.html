@@ -82,7 +82,7 @@ select.inp{background:var(--surface);padding:13px 12px;border:1px solid var(--bo
 /* AUTH */
 #auth-page{justify-content:flex-end;padding-bottom:0;background:var(--void);}
 .auth-wrap{width:100%;display:flex;flex-direction:column;flex:1;min-height:100vh;}
-.auth-hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 28px 32px;text-align:center;position:relative;overflow:hidden;}
+.auth-hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 28px 32px;text-align:center;position:relative;overflow:hidden;background:radial-gradient(ellipse 80% 60% at 50% 40%,rgba(96,112,160,.08) 0%,transparent 70%),radial-gradient(ellipse 40% 30% at 20% 70%,rgba(160,168,184,.04) 0%,transparent 60%);}
 .auth-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 40% at 50% 60%,rgba(160,168,184,.05) 0%,transparent 70%);}
 .auth-card{background:var(--deep);border-top:1px solid var(--border2);padding:28px 24px calc(40px + var(--safe-bottom));}
 .auth-tabs{display:flex;gap:0;margin-bottom:24px;border-bottom:1px solid var(--border);}
@@ -250,6 +250,11 @@ select.inp{background:var(--surface);padding:13px 12px;border:1px solid var(--bo
 .game-main{flex:1;min-width:0;padding:24px 28px calc(96px + var(--safe-bottom));}
 .choice-sidebar{width:260px;flex-shrink:0;padding:20px;border-left:1px solid var(--border);position:sticky;top:52px;max-height:calc(100vh - 52px);overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
 @media(max-width:860px){.choice-sidebar{display:none;}}
+.timeline-item{padding:10px 0;border-bottom:1px solid var(--border);}
+.timeline-item:last-child{border-bottom:none;}
+.tl-ch{font-family:var(--font-mono);font-size:8px;font-weight:700;letter-spacing:.14em;color:var(--ink4);text-transform:uppercase;margin-bottom:3px;}
+.tl-text{font-family:var(--font-display);font-size:13px;color:var(--ink2);line-height:1.4;}
+.tl-tag{display:inline-block;font-family:var(--font-mono);font-size:7px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:1px 5px;margin-top:3px;}
 .sidebar-title{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink4);margin-bottom:12px;}
 .timeline-empty{font-family:var(--font-mono);font-size:10px;color:var(--ink4);text-align:center;padding:20px 8px;font-style:italic;letter-spacing:.04em;}
 .tl-entry{border-bottom:1px solid var(--border);padding:12px 0 12px 12px;cursor:pointer;transition:background .18s;position:relative;overflow:hidden;}
@@ -265,7 +270,7 @@ select.inp{background:var(--surface);padding:13px 12px;border:1px solid var(--bo
 .btitle{font-family:var(--font-display);font-size:22px;font-weight:600;color:var(--ink);letter-spacing:-.01em;font-style:italic;}
 .moodchip{font-family:var(--font-mono);font-size:8px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border:1px solid var(--border);color:var(--ink4);}
 .echo{font-family:var(--font-display);font-size:15px;font-style:italic;color:var(--ink3);padding:10px 0 10px 18px;margin:6px 0 14px;border-left:1px solid var(--ochre);}
-.spara{font-family:var(--font-display);font-size:clamp(21px,2.8vw,28px);line-height:1.85;color:var(--ink);padding:6px 0 18px;cursor:pointer;letter-spacing:-.01em;font-weight:300;}
+.spara{font-family:var(--font-display);font-size:clamp(20px,2.6vw,26px);line-height:1.9;color:var(--ink);letter-spacing:.01em;padding:8px 0 18px;cursor:pointer;letter-spacing:-.01em;font-weight:300;}
 .spara::first-letter{font-family:var(--font-title);font-size:4.5em;line-height:.75;float:left;margin:8px 10px 0 0;color:#8898b8;letter-spacing:.02em;}
 
 /* ═══════════════════════════════════════════════════
@@ -299,7 +304,7 @@ select.inp{background:var(--surface);padding:13px 12px;border:1px solid var(--bo
 /* CHOICES */
 .cwrap{display:flex;flex-direction:column;gap:0;margin-top:20px;margin-bottom:calc(92px + var(--safe-bottom));border-top:1px solid var(--border);}
 .chdr{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink4);padding:16px 0 12px;text-align:center;}
-.cbtn{background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--ink);padding:20px 0;cursor:pointer;font-family:var(--font-display);font-size:20px;line-height:1.5;text-align:left;transition:all .18s;display:flex;align-items:flex-start;gap:16px;width:100%;border-radius:0;}
+.cbtn{background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--ink);padding:18px 0 18px 4px;transition:padding-left .18s,background .18s;cursor:pointer;font-family:var(--font-display);font-size:20px;line-height:1.5;text-align:left;transition:all .18s;display:flex;align-items:flex-start;gap:16px;width:100%;border-radius:0;}
 .cbtn:hover{padding-left:12px;background:var(--ochre-glow);}
 .cbtn:active{background:var(--ochre-dim);}
 .cbtn:disabled{opacity:.22;cursor:not-allowed;}
@@ -701,7 +706,7 @@ select.inp{background:var(--surface);padding:13px 12px;border:1px solid var(--bo
   </div>
 </div>
 <div id="chprogbar" style="height:2px;background:var(--border-s);position:sticky;top:46px;z-index:49;">
-  <div id="chprogfill" style="height:100%;background:var(--ochre2);width:0%;transition:width .6s ease;"></div>
+  <div id="chprogfill" style="height:100%;background:linear-gradient(90deg,var(--terra2),var(--ochre2));width:0%;transition:width .8s cubic-bezier(.16,1,.3,1);"></div>
 </div>
 <div id="autosave-toast">✓ Saved</div>
 <div class="game-layout">
@@ -972,8 +977,9 @@ function cap(s){return s?s[0].toUpperCase()+s.slice(1):'';}
 function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function sanitizeInput(s){if(!s)return'';return String(s).replace(/<script[\s\S]*?<\/script>/gi,'').replace(/javascript\s*:/gi,'').replace(/on\w+\s*=/gi,'').replace(/[<>]/g,'').trim().slice(0,200);}
 function delStory(i){if(!CU||CU.guest)return;var a=gstories(CU.email);a.splice(i,1);sstories(CU.email,a);rdash();}
-function saveGame(ended){if(!CU||CU.guest)return;var a=gstories(CU.email);var snap={genre:G.genre,seed:G.seed,title:G.title,chapter:G.chapter,choicesMade:G.choicesMade,choiceLog:G.choiceLog,messages:G.messages,settings:G.settings,len:G.settings.len,tone:G.settings.tone,startedAt:G.startedAt,savedAt:Date.now(),ended:ended||false};var idx=a.findIndex(function(s){return s.startedAt===G.startedAt;});if(idx>=0)a[idx]=snap;else a.push(snap);sstories(CU.email,a);if(!ended)showToast('✓ Progress saved');}
-function resumeStory(i){var a=gstories(CU.email),s=a[i];if(!s)return;G={genre:s.genre,seed:s.seed,title:s.title||'',chapter:s.chapter||1,choicesMade:s.choicesMade||0,choiceLog:s.choiceLog||[],messages:s.messages||[],settings:s.settings||{},startedAt:s.startedAt||Date.now()};if(s.settings&&s.settings.charList)loadCharsFromSave(s.settings.charList);else loadCharsFromSave(null);setupGNav();clearTimeline();(G.choiceLog||[]).forEach(function(c,idx){addToTimeline(idx+1,c.text,c.letter||'?');});document.getElementById('storyLog').innerHTML='';document.getElementById('cwrap').innerHTML='';document.getElementById('errbox').innerHTML='';var log=document.getElementById('storyLog');var rs=document.createElement('div');rs.className='bsep';rs.innerHTML='<span class="bch">Resumed</span><span class="btitle">Continuing from Chapter '+G.chapter+'</span>';log.appendChild(rs);if(G.choiceLog.length){G.choiceLog.slice(-3).forEach(function(c){var e=document.createElement('div');e.className='echo';e.textContent='▶ '+c.text;log.appendChild(e);});}initSummaryPanel();showPage('game-page');fetchBeat(null,true,0);}
+function saveGame(ended){if(!CU)return;// Allow guest saves too
+  var saveEmail=CU.guest?'__guest__':CU.email;var a=gstories(saveEmail);var snap={genre:G.genre,seed:G.seed,title:G.title,chapter:G.chapter,choicesMade:G.choicesMade,choiceLog:G.choiceLog,messages:G.messages,settings:G.settings,len:G.settings.len,tone:G.settings.tone,startedAt:G.startedAt,savedAt:Date.now(),ended:ended||false};var idx=a.findIndex(function(s){return s.startedAt===G.startedAt;});if(idx>=0)a[idx]=snap;else a.push(snap);sstories(saveEmail,a);if(!ended)showToast('✓ Progress saved');}
+function resumeStory(i){var _re=CU&&CU.guest?'__guest__':(CU&&CU.email)||'__guest__';var a=gstories(_re),s=a[i];if(!s)return;G={genre:s.genre,seed:s.seed,title:s.title||'',chapter:s.chapter||1,choicesMade:s.choicesMade||0,choiceLog:s.choiceLog||[],messages:s.messages||[],settings:s.settings||{},startedAt:s.startedAt||Date.now()};if(s.settings&&s.settings.charList)loadCharsFromSave(s.settings.charList);else loadCharsFromSave(null);setupGNav();clearTimeline();(G.choiceLog||[]).forEach(function(c,idx){addToTimeline(idx+1,c.text,c.letter||'?');});document.getElementById('storyLog').innerHTML='';document.getElementById('cwrap').innerHTML='';document.getElementById('errbox').innerHTML='';var log=document.getElementById('storyLog');var rs=document.createElement('div');rs.className='bsep';rs.innerHTML='<span class="bch">Resumed</span><span class="btitle">Continuing from Chapter '+G.chapter+'</span>';log.appendChild(rs);if(G.choiceLog.length){G.choiceLog.slice(-3).forEach(function(c){var e=document.createElement('div');e.className='echo';e.textContent='▶ '+c.text;log.appendChild(e);});}initSummaryPanel();showPage('game-page');fetchBeat(null,true,0);}
 
 /* ═══════════════════════════════════════════════════
    WIZARD
@@ -1020,6 +1026,18 @@ function buildSum(){var namedChars=_chars.filter(function(c){return c.name.trim(
    GAME STATE
 ═══════════════════════════════════════════════════ */
 var G={genre:'',seed:'',title:'',chapter:1,choicesMade:0,choiceLog:[],messages:[],settings:{},startedAt:0};
+
+// Keyboard shortcuts: A/B/C to pick choices
+document.addEventListener('keydown',function(e){
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+  var key=e.key.toUpperCase();
+  if(['A','B','C'].indexOf(key)<0)return;
+  var btns=document.querySelectorAll('.cbtn:not([disabled])');
+  btns.forEach(function(btn){
+    var ltr=btn.querySelector('.cletter');
+    if(ltr&&ltr.textContent.trim()===key)btn.click();
+  });
+});
 var REAL_PERSON={active:false,name:'',city:'',detail:''};
 var CURRENT_MOOD=null;
 var _moodCallback=null;
@@ -1040,10 +1058,13 @@ function closeMoodOverlay(mood){CURRENT_MOOD=mood||CURRENT_MOOD;document.getElem
 
 var TW_SPEED=14;
 function toggleSpeed(){var btn=document.getElementById('btnSpeed');if(TW_SPEED===14){TW_SPEED=4;btn.textContent='🐇 Turbo';}else if(TW_SPEED===4){TW_SPEED=0;btn.textContent='⏩ Instant';}else{TW_SPEED=14;btn.textContent='⚡ Fast';}}
-function updateProgress(){var s=G.settings,maxCh=s.customCh||25,pct=Math.min(100,Math.round((G.chapter/maxCh)*100));var fill=document.getElementById('chprogfill');if(fill)fill.style.width=pct+'%';document.getElementById('gnCh').textContent='CH '+G.chapter+' / '+maxCh;}
+function updateProgress(){
+  if(G.title)document.title=G.title+' · Ch.'+G.chapter+' — NEXUS';var s=G.settings,maxCh=s.customCh||25,pct=Math.min(100,Math.round((G.chapter/maxCh)*100));var fill=document.getElementById('chprogfill');if(fill)fill.style.width=pct+'%';document.getElementById('gnCh').textContent='CH '+G.chapter+' / '+maxCh;}
 function showToast(msg){var t=document.getElementById('autosave-toast');if(!t)return;t.textContent=msg;t.style.display='block';t.classList.remove('autosave-out');clearTimeout(t._timer);t._timer=setTimeout(function(){t.classList.add('autosave-out');setTimeout(function(){t.style.display='none';},400);},2200);}
-function setupGNav(){var cc=GC[G.genre]||'#a0a8b8';var b=document.getElementById('gnBadge');b.textContent=G.genre.toUpperCase();b.style.color=cc;b.style.borderColor=cc;var ab=document.getElementById('gnAuthor');if(ab){var auth=(G.settings&&G.settings.customAuthor)||(AUTHOR_DB[G.genre]&&AUTHOR_DB[G.genre].name)||'Author';ab.textContent='à la '+auth;ab.style.color=cc;}updateProgress();var sb=document.getElementById('btnSave');if(sb)sb.style.display=(CU&&!CU.guest)?'inline-flex':'none';}
-function leavegame(){stopSpeaking();if(CU&&!CU.guest&&G.chapter>1)saveGame(false);showPage('dash-page');rdash();setActiveNav('dash');}
+function setupGNav(){document.querySelector('.bottom-nav')&&document.querySelector('.bottom-nav').classList.add('hidden');var cc=GC[G.genre]||'#a0a8b8';var b=document.getElementById('gnBadge');b.textContent=G.genre.toUpperCase();b.style.color=cc;b.style.borderColor=cc;var ab=document.getElementById('gnAuthor');if(ab){var auth=(G.settings&&G.settings.customAuthor)||(AUTHOR_DB[G.genre]&&AUTHOR_DB[G.genre].name)||'Author';ab.textContent='à la '+auth;ab.style.color=cc;}updateProgress();var sb=document.getElementById('btnSave');if(sb)sb.style.display=(CU&&!CU.guest)?'inline-flex':'none';}
+function leavegame(){document.querySelector('.bottom-nav')&&document.querySelector('.bottom-nav').classList.remove('hidden');
+  // Cancel any pending Pollinations loads
+  document.querySelectorAll('.nx-scene-panel img').forEach(function(img){img.src='';});stopSpeaking();if(CU&&!CU.guest&&G.chapter>1)saveGame(false);showPage('dash-page');rdash();setActiveNav('dash');}
 
 var CHOICE_TAGS={aggressive:['attack','fight','confront','challenge','demand','force','strike','kill','flee','run'],clever:['trick','deceive','lie','sneak','steal','investigate','analyze','negotiate','bribe','distract','plan','hide'],vulnerable:['trust','tell','confess','ask','help','forgive','accept','surrender','share','admit','open','reach','comfort','stay']};
 function classifyChoice(text){var lower=text.toLowerCase();var scores={aggressive:0,clever:0,vulnerable:0};Object.keys(CHOICE_TAGS).forEach(function(tag){CHOICE_TAGS[tag].forEach(function(kw){if(lower.indexOf(kw)>-1)scores[tag]++;});});var best='vulnerable';var max=0;Object.keys(scores).forEach(function(k){if(scores[k]>max){max=scores[k];best=k;}});return best;}
@@ -1054,7 +1075,7 @@ function clearTimeline(){var list=document.getElementById('timelineList');if(lis
 /* ═══════════════════════════════════════════════════
    STORY GENERATION
 ═══════════════════════════════════════════════════ */
-var LMSGS=['Writing your fate…','What happens next…','The story stirs…','Weaving the thread…','Consulting the fates…'];
+var LMSGS=['Writing your fate…','What happens next…','The story stirs…','Weaving the thread…','Consulting the fates…','Turning the page…','The plot thickens…','Destiny awaits…','Something wicked this way comes…','The choice echoes…'];
 var MAX_AUTO_RETRY=3;
 
 function buildSysPrompt(){
@@ -1111,11 +1132,11 @@ function fetchBeat(chosenText,isResume,retryCount){
 
 function renderBeat(data,chosenText){
   var log=document.getElementById('storyLog');
-  var sep=document.createElement('div');sep.className='bsep';sep.innerHTML='<span class="bch">Ch. '+G.chapter+'</span><span class="btitle">'+(data.chapterTitle||'')+'</span>'+(data.mood||[]).map(function(m){return'<span class="moodchip">'+m+'</span>';}).join('');log.appendChild(sep);
+  var sep=document.createElement('div');sep.className='bsep';var wc=data.paragraph?(data.paragraph.split(/\s+/).length):0;var rt=Math.max(1,Math.round(wc/200));sep.innerHTML='<span class="bch">Ch. '+G.chapter+'</span><span class="btitle">'+(data.chapterTitle||'')+'</span>'+(data.mood||[]).map(function(m){return'<span class="moodchip">'+m+'</span>';}).join('')+'<span class="moodchip" style="opacity:.45">'+rt+' min</span>';log.appendChild(sep);
   if(chosenText){var echo=document.createElement('div');echo.className='echo';echo.textContent='▶ '+chosenText;log.appendChild(echo);}
   var para=document.createElement('div');para.className='spara';para.title='Click to skip typewriter';log.appendChild(para);
   updateProgress();refreshSummary();
-  if(G.chapter>1&&G.chapter%5===0&&CU&&!CU.guest){saveGame(false);showToast('✓ Auto-saved Ch.'+G.chapter);}
+  if(G.chapter>1&&G.chapter%5===0&&CU){saveGame(false);showToast('✓ Auto-saved Ch.'+G.chapter);}
   setTimeout(function(){para.scrollIntoView({behavior:'smooth',block:'start'});},60);
   typewrite(para,data.paragraph,function(){
     renderWorldMemoryStrip();
@@ -2538,55 +2559,22 @@ var MOOD_TAGS={
 
 function buildIllustrationPrompt(paragraph,genre,sd){
   var g=genre||'fantasy';
-  var env=sd&&sd.env||'living_room';
-  var mood=sd&&sd.mood||'tension';
-  var holding=sd&&sd.holding||'none';
-  var pose=sd&&sd.pose||'standing';
-  var weather=sd&&sd.weather||'clear';
+  var env=(sd&&sd.env)||'living_room';
+  var mood=(sd&&sd.mood)||'tension';
+  var holding=(sd&&sd.holding)||'none';
+  var pose=(sd&&sd.pose)||'standing';
+  var weather=(sd&&sd.weather)||'clear';
   var twoChars=sd&&sd.twoChars;
-
-  // Core scene description from paragraph (first ~80 chars, cleaned)
-  var sceneHint=paragraph.replace(/["""'']/g,'').replace(/\s+/g,' ').slice(0,90).trim();
-
-  // Build prompt parts
-  var parts=[];
-
-  // 1. Scene context from actual story text
-  parts.push(sceneHint);
-
-  // 2. Environment
-  var envTag=ENV_TAGS[env]||'interior scene';
-  parts.push(envTag);
-
-  // 3. Characters
-  if(twoChars){
-    parts.push('two characters, '+pose+' pose');
-  } else {
-    var charDesc='one character, '+pose+' pose';
-    if(holding!=='none')charDesc+=', holding a '+holding;
-    parts.push(charDesc);
-  }
-
-  // 4. Weather overlay
-  if(weather==='rain')parts.push('raining, wet atmosphere');
-  else if(weather==='snow')parts.push('snowfall, winter atmosphere');
-  else if(weather==='fog')parts.push('misty foggy atmosphere');
-
-  // 5. Mood
-  var moodTag=MOOD_TAGS[mood]||'atmospheric mood';
-  parts.push(moodTag);
-
-  // 6. Style — genre-specific illustration style
+  var cleaned=paragraph.replace(/\s+/g,' ').slice(0,100).trim();
+  var envTag=ENV_TAGS[env]||'atmospheric interior';
+  if(sd&&sd.props&&sd.props.length){envTag=envTag+', '+sd.props.slice(0,3).join(', ');}
+  var charDesc=twoChars?('two figures facing each other, '+pose):('solitary figure, '+pose+(holding!=='none'?', holding '+holding:''));
+  var lightMap={fluorescent:'cold clinical lighting',candlelit:'warm candlelight',golden:'golden hour sunlight',moonlit:'silver moonlight',dramatic:'dramatic chiaroscuro',dim:'dim low light',ambient:'soft ambient lighting'};
+  var lightDesc=lightMap[(sd&&sd.lighting)||'ambient']||'cinematic lighting';
+  var moodTag=MOOD_TAGS[mood]||'atmospheric tension';
   var styleTag=STYLE_TAGS[g]||STYLE_TAGS.fantasy;
-  parts.push(styleTag);
-
-  // 7. Quality tags
-  parts.push('cinematic composition, high quality, detailed, 16:9 aspect ratio');
-
-  // 8. Negative concepts baked into prompt phrasing (Pollinations supports this)
-  var prompt=parts.join(', ');
-
-  return prompt;
+  var weatherTag=weather==='rain'?'heavy rain, wet reflections':weather==='snow'?'falling snow, winter light':weather==='fog'?'thick fog, mist':'';
+  return [cleaned,charDesc,envTag,lightDesc,moodTag,weatherTag,styleTag,'wide cinematic frame, detailed illustration, rich colors, no text, no watermark'].filter(Boolean).join(', ');
 }
 
 function buildPollinationsUrl(prompt,width,height){
@@ -2617,7 +2605,6 @@ function buildPanel(genre){
   var img=document.createElement('img');
   img.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .9s ease;display:block;';
   img.alt='Story illustration';
-  img.crossOrigin='anonymous';
 
   // Caption bar
   var caption=document.createElement('div');
@@ -2630,7 +2617,7 @@ function buildPanel(genre){
 
   // Small pulsing dot = AI generating
   var loadingDot=document.createElement('div');
-  loadingDot.style.cssText='position:absolute;bottom:10px;right:10px;width:7px;height:7px;border-radius:50%;background:rgba(160,168,184,.6);animation:nxPulse 1.2s ease-in-out infinite;z-index:5;pointer-events:none;';
+  loadingDot.style.cssText='position:absolute;bottom:8px;right:10px;display:flex;align-items:center;gap:5px;z-index:5;pointer-events:none;font-family:var(--font-mono);font-size:8px;color:rgba(160,168,184,.5);letter-spacing:.06em;text-transform:uppercase;';loadingDot.innerHTML='<span style="width:5px;height:5px;border-radius:50%;background:rgba(160,168,184,.7);animation:nxPulse 1s ease-in-out infinite;display:inline-block;margin-right:4px;"></span>AI Illustrating…';
 
   panel.appendChild(canvas);
   panel.appendChild(img);
@@ -2676,9 +2663,8 @@ async function renderScene(paragraph,genre,tone,insertAfterEl){
 
   // Get actual rendered dimensions — fall back to safe defaults if layout not ready yet
   var W=Math.floor(panel.offsetWidth)||640;
-  var H=Math.floor(panel.offsetHeight)||(Math.floor(W*9/16))||360;
-  // Safety: if still 0 (not in DOM yet), use known defaults
-  if(W<10){W=640;H=360;}
+  if(W<10)W=640;
+  var H=Math.floor(W*9/16);  // Always derive H from W for correct 16:9
 
   canvas.width=W;canvas.height=H;
 
@@ -2718,6 +2704,7 @@ async function renderScene(paragraph,genre,tone,insertAfterEl){
       loadingDot.style.display='none';
     },25000);
 
+    var _retried=false;
     img.onload=function(){
       clearTimeout(loadTimeout);
       img.style.opacity='1';
@@ -2726,8 +2713,17 @@ async function renderScene(paragraph,genre,tone,insertAfterEl){
     };
     img.onerror=function(){
       clearTimeout(loadTimeout);
-      loadingDot.style.display='none';
-      console.log('[NEXUS] Pollinations unavailable — canvas illustration active');
+      if(!_retried){
+        // Retry once with a fresh seed after 2s
+        _retried=true;
+        setTimeout(function(){
+          var retryUrl=buildPollinationsUrl(prompt,aiW,aiH);
+          img.src=retryUrl;
+        },2000);
+      } else {
+        loadingDot.style.display='none';
+        console.log('[NEXUS] Pollinations unavailable — canvas illustration active');
+      }
     };
 
     img.src=url;
