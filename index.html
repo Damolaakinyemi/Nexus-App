@@ -287,7 +287,7 @@ select.inp{background:var(--surface);padding:13px 12px;border:1px solid var(--bo
 .nx-scene-panel{width:calc(100% + 56px);margin-left:-28px;margin-right:-28px;aspect-ratio:16/9;min-height:200px;position:relative;overflow:hidden;background:#0a0c14;cursor:zoom-in;border:1px solid rgba(160,168,184,.15);margin-top:6px;margin-bottom:6px;}
 @media(max-width:600px){.nx-scene-panel{width:calc(100% + 40px);margin-left:-20px;margin-right:-20px;}}
 .nx-scene-panel canvas{position:absolute;inset:0;width:100%;height:100%;z-index:1;}
-.nx-scene-panel img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .9s ease;}
+.nx-scene-panel img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.4s ease;z-index:2;}
 
 .nx-scene-caption{position:absolute;bottom:0;left:0;right:0;padding:32px 12px 10px;background:linear-gradient(to top,rgba(14,16,24,.88) 0%,transparent 100%);display:flex;align-items:flex-end;justify-content:space-between;opacity:0;transition:opacity .3s;pointer-events:none;}
 .nx-scene-panel:hover .nx-scene-caption{opacity:1;}
@@ -536,7 +536,6 @@ select.inp{background:var(--surface);padding:13px 12px;border:1px solid var(--bo
 
 <!-- DASHBOARD -->
 <div id="dash-page" class="page">
-<audio id="bgMusic" loop style="display:none"></audio>
 <div class="topbar">
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
     <span class="topbar-logo">NEXUS</span>
@@ -917,6 +916,8 @@ function verifyOTP(){
 }
 
 function doLogin(){
+  var _dlBtn=document.querySelector('#fIn .btn-white');if(_dlBtn){if(_dlBtn._loading)return;_dlBtn._loading=true;_dlBtn.disabled=true;_dlBtn.textContent='Signing in…';}
+  function _rlb(){if(_dlBtn){_dlBtn._loading=false;_dlBtn.disabled=false;_dlBtn.textContent='Sign In';}}
   var email=document.getElementById('inEmail').value.trim().toLowerCase();
   var pass=document.getElementById('inPass').value;
   var us=gu();
@@ -1251,51 +1252,211 @@ showPage=function(id){_origShowPage(id);var noNav=['auth-page','game-page','wiz-
 
 
 /* ════════════════════════════════════════════════════════════
-   MUSIC
+   NEXUS AMBIENT MUSIC ENGINE — Web Audio API
+   Procedurally generated genre-matched ambient soundscapes.
+   No external CDN needed — always works, never 404s.
+   Each genre has unique: tempo, chord, texture, rhythm
 ════════════════════════════════════════════════════════════ */
-var _musicPlaying=false,_currentGenre='';
-var MUSIC={
-  thriller:'https://cdn.pixabay.com/audio/2022/11/22/audio_febc508520.mp3',
-  mystery:'https://cdn.pixabay.com/audio/2022/11/22/audio_febc508520.mp3',
-  horror:'https://cdn.pixabay.com/audio/2022/03/10/audio_c8c8a73467.mp3',
-  fantasy:'https://cdn.pixabay.com/audio/2022/10/25/audio_946b8e9bf9.mp3',
-  romance:'https://cdn.pixabay.com/audio/2023/06/28/audio_5a8eca7e9c.mp3',
-  scifi:'https://cdn.pixabay.com/audio/2022/12/23/audio_b9c1d0c68a.mp3',
-  noir:'https://cdn.pixabay.com/audio/2022/11/22/audio_febc508520.mp3',
-  supernatural:'https://cdn.pixabay.com/audio/2022/03/10/audio_c8c8a73467.mp3',
-  historical:'https://cdn.pixabay.com/audio/2023/06/28/audio_5a8eca7e9c.mp3',
-  isekai:'https://cdn.pixabay.com/audio/2022/10/25/audio_946b8e9bf9.mp3',
-  survival:'https://cdn.pixabay.com/audio/2022/11/22/audio_febc508520.mp3',
-  random:'https://cdn.pixabay.com/audio/2022/10/25/audio_946b8e9bf9.mp3'
+var _actx=null,_nodes=[],_musicPlaying=false,_currentGenre='';
+
+function _getACtx(){
+  if(!_actx){
+    try{_actx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){return null;}
+  }
+  if(_actx.state==='suspended')_actx.resume();
+  return _actx;
+}
+
+// Genre-specific music profiles
+var MUSIC_PROFILES={
+  thriller:{
+    bpm:72, baseNote:110, chord:[0,3,7,10], texture:'pulse',
+    padVol:.12, pulseVol:.06, padType:'sawtooth',
+    lfoRate:.3, lfoDepth:8, reverb:.7, filterFreq:400
+  },
+  mystery:{
+    bpm:58, baseNote:98, chord:[0,3,7,11], texture:'breathe',
+    padVol:.10, pulseVol:.04, padType:'sine',
+    lfoRate:.2, lfoDepth:6, reverb:.8, filterFreq:600
+  },
+  horror:{
+    bpm:48, baseNote:82, chord:[0,2,6,8], texture:'drone',
+    padVol:.14, pulseVol:.03, padType:'sawtooth',
+    lfoRate:.1, lfoDepth:12, reverb:.9, filterFreq:300
+  },
+  romance:{
+    bpm:80, baseNote:130, chord:[0,4,7,11], texture:'breathe',
+    padVol:.09, pulseVol:.03, padType:'sine',
+    lfoRate:.4, lfoDepth:4, reverb:.6, filterFreq:1200
+  },
+  fantasy:{
+    bpm:68, baseNote:164, chord:[0,4,7,9], texture:'shimmer',
+    padVol:.11, pulseVol:.04, padType:'triangle',
+    lfoRate:.25, lfoDepth:10, reverb:.75, filterFreq:900
+  },
+  scifi:{
+    bpm:90, baseNote:55, chord:[0,5,7,10], texture:'pulse',
+    padVol:.10, pulseVol:.08, padType:'square',
+    lfoRate:.5, lfoDepth:15, reverb:.5, filterFreq:800
+  },
+  noir:{
+    bpm:65, baseNote:92, chord:[0,3,6,10], texture:'breathe',
+    padVol:.10, pulseVol:.04, padType:'sawtooth',
+    lfoRate:.2, lfoDepth:7, reverb:.8, filterFreq:500
+  },
+  supernatural:{
+    bpm:52, baseNote:73, chord:[0,2,7,9], texture:'shimmer',
+    padVol:.13, pulseVol:.02, padType:'sine',
+    lfoRate:.15, lfoDepth:14, reverb:.95, filterFreq:700
+  },
+  historical:{
+    bpm:62, baseNote:146, chord:[0,4,7,12], texture:'breathe',
+    padVol:.10, pulseVol:.03, padType:'triangle',
+    lfoRate:.3, lfoDepth:6, reverb:.65, filterFreq:1000
+  },
+  isekai:{
+    bpm:88, baseNote:196, chord:[0,4,7,11], texture:'shimmer',
+    padVol:.10, pulseVol:.05, padType:'triangle',
+    lfoRate:.4, lfoDepth:8, reverb:.7, filterFreq:1100
+  },
+  survival:{
+    bpm:76, baseNote:73, chord:[0,2,5,7], texture:'pulse',
+    padVol:.11, pulseVol:.07, padType:'sawtooth',
+    lfoRate:.35, lfoDepth:10, reverb:.55, filterFreq:600
+  },
+  random:{
+    bpm:70, baseNote:130, chord:[0,4,7,9], texture:'breathe',
+    padVol:.10, pulseVol:.04, padType:'sine',
+    lfoRate:.3, lfoDepth:8, reverb:.7, filterFreq:800
+  }
 };
+
+function _noteFreq(base, semitones){
+  return base * Math.pow(2, semitones/12);
+}
+
+function _makeReverb(ctx, secs, decay){
+  var len=ctx.sampleRate*secs;
+  var buf=ctx.createBuffer(2,len,ctx.sampleRate);
+  for(var ch=0;ch<2;ch++){
+    var d=buf.getChannelData(ch);
+    for(var i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,decay);
+  }
+  var conv=ctx.createConvolver();conv.buffer=buf;return conv;
+}
+
 function startMusic(genre){
   var g=(typeof G!=='undefined'&&G.genre)?G.genre:(genre||'thriller');
   if(_musicPlaying&&g===_currentGenre)return;
   stopMusic();
   _currentGenre=g;
-  var el=document.getElementById('bgMusic');
-  if(!el){el=document.createElement('audio');el.id='bgMusic';el.loop=true;el.style.display='none';document.body.appendChild(el);}
-  var url=MUSIC[_currentGenre]||MUSIC.thriller;
-  if(el.src===url&&_musicPlaying)return;
-  el.src=url;
-  el.volume=0.2;
-  el.loop=true;
-  var playPromise=el.play();
-  if(playPromise!==undefined){
-    playPromise.catch(function(){
-      // Autoplay blocked - wait for first user interaction
-      var resume=function(){el.play().catch(function(){});document.removeEventListener('click',resume);document.removeEventListener('keydown',resume);};
-      document.addEventListener('click',resume,{once:true});
-      document.addEventListener('keydown',resume,{once:true});
-    });
+  var ctx=_getACtx();
+  if(!ctx)return;
+
+  var prof=MUSIC_PROFILES[g]||MUSIC_PROFILES.thriller;
+  var master=ctx.createGain();master.gain.value=0;master.connect(ctx.destination);
+
+  // Reverb
+  var rev=_makeReverb(ctx,prof.reverb*4,3);
+  var revGain=ctx.createGain();revGain.gain.value=prof.reverb*.5;
+  rev.connect(revGain);revGain.connect(master);
+
+  // Low-pass filter for warmth
+  var filt=ctx.createBiquadFilter();
+  filt.type='lowpass';filt.frequency.value=prof.filterFreq;
+  filt.connect(master);filt.connect(rev);
+
+  var now=ctx.currentTime;
+
+  // Layer 1: Pad chords — cycle through chord notes
+  prof.chord.forEach(function(semi,i){
+    var freq=_noteFreq(prof.baseNote,semi);
+    var osc=ctx.createOscillator();osc.type=prof.padType;
+    osc.frequency.value=freq;
+    var g2=ctx.createGain();g2.gain.value=0;
+    osc.connect(g2);g2.connect(filt);
+    // Stagger entries
+    var delay=i*0.8;
+    g2.gain.setValueAtTime(0,now+delay);
+    g2.gain.linearRampToValueAtTime(prof.padVol/(i+1),now+delay+2.5);
+    // LFO tremolo
+    var lfo=ctx.createOscillator();lfo.frequency.value=prof.lfoRate+(i*.07);
+    var lfoGain=ctx.createGain();lfoGain.gain.value=prof.lfoDepth*.001;
+    lfo.connect(lfoGain);lfoGain.connect(osc.frequency);
+    lfo.start(now+delay);osc.start(now+delay);
+    _nodes.push(osc,lfo,g2,lfoGain);
+  });
+
+  // Layer 2: Sub bass drone
+  var bass=ctx.createOscillator();bass.type='sine';
+  bass.frequency.value=prof.baseNote/2;
+  var bassGain=ctx.createGain();bassGain.gain.value=0;
+  bass.connect(bassGain);bassGain.connect(master);
+  bassGain.gain.setValueAtTime(0,now);
+  bassGain.gain.linearRampToValueAtTime(.08,now+3);
+  bass.start(now);_nodes.push(bass,bassGain);
+
+  // Layer 3: Texture layer (genre-specific rhythm/pulse)
+  if(prof.texture==='pulse'){
+    // Rhythmic pulse
+    var beatInterval=(60/prof.bpm);
+    for(var b=0;b<120;b++){
+      var bt=now+b*beatInterval;
+      var posc=ctx.createOscillator();posc.type='square';
+      posc.frequency.value=_noteFreq(prof.baseNote,prof.chord[b%prof.chord.length]);
+      var pg=ctx.createGain();pg.gain.value=0;
+      posc.connect(pg);pg.connect(filt);
+      pg.gain.setValueAtTime(0,bt);
+      pg.gain.linearRampToValueAtTime(prof.pulseVol,bt+0.01);
+      pg.gain.exponentialRampToValueAtTime(0.001,bt+0.18);
+      posc.start(bt);posc.stop(bt+0.2);
+      _nodes.push(posc,pg);
+    }
+  }else if(prof.texture==='shimmer'){
+    // High shimmer
+    for(var s=0;s<8;s++){
+      var so=ctx.createOscillator();so.type='sine';
+      so.frequency.value=_noteFreq(prof.baseNote*4,s*2);
+      var sg=ctx.createGain();sg.gain.value=0;
+      so.connect(sg);sg.connect(rev);
+      sg.gain.setValueAtTime(0,now+s*.4);
+      sg.gain.linearRampToValueAtTime(.015,now+s*.4+1.5);
+      var slfo=ctx.createOscillator();slfo.frequency.value=.5+s*.1;
+      var slg=ctx.createGain();slg.gain.value=.008;
+      slfo.connect(slg);slg.connect(sg.gain);
+      slfo.start(now+s*.4);so.start(now+s*.4);
+      _nodes.push(so,sg,slfo,slg);
+    }
   }
+  // breathe = just pads, already done
+
+  // Fade master in
+  master.gain.setValueAtTime(0,now);
+  master.gain.linearRampToValueAtTime(1,now+4);
+  _nodes.push(master,filt,rev,revGain);
   _musicPlaying=true;
 }
-function stopMusic(){var el=document.getElementById('bgMusic');if(el){el.pause();el.src='';}  _musicPlaying=false;}
-function fadeOutMusic(cb){
-  var el=document.getElementById('bgMusic');if(!el||!_musicPlaying){if(cb)cb();return;}
-  var step=el.volume/20;var t=setInterval(function(){el.volume=Math.max(0,el.volume-step);if(el.volume<=0){clearInterval(t);stopMusic();if(cb)cb();}},80);
+
+function stopMusic(){
+  var ctx=_getACtx();
+  if(ctx&&_musicPlaying){
+    var now=ctx.currentTime;
+    _nodes.forEach(function(n){
+      try{
+        if(n.gain){n.gain.cancelScheduledValues(now);n.gain.setValueAtTime(n.gain.value,now);n.gain.linearRampToValueAtTime(0,now+1.5);}
+      }catch(e){}
+      try{if(n.stop)setTimeout(function(){try{n.stop();}catch(e){}},1600);}catch(e){}
+      try{if(n.disconnect)setTimeout(function(){try{n.disconnect();}catch(e){}},1700);}catch(e){}
+    });
+  }
+  _nodes=[];_musicPlaying=false;
 }
+
+function fadeOutMusic(cb){
+  stopMusic();
+  if(cb)setTimeout(cb,1600);
+}
+
 window.startMusic=startMusic;window.stopMusic=stopMusic;window.fadeOutMusic=fadeOutMusic;
 var _obs=window.beginStory;if(typeof _obs==='function'){window.beginStory=function(){_obs.apply(this,arguments);var _mg=typeof G!=='undefined'&&G.genre?G.genre:'thriller';setTimeout(function(){startMusic(_mg);},400);};}
 var _olg=window.leavegame;if(typeof _olg==='function'){window.leavegame=function(){fadeOutMusic(function(){});_olg.apply(this,arguments);};}
@@ -1371,99 +1532,162 @@ function hashStr(s){var h=0;for(var i=0;i<Math.min(s.length,120);i++)h=(Math.imu
    Runs BEFORE Claude call to hard-override obvious settings
    Returns {env, props[], holding, pose, mood, lighting} or null
 ════════════════════════════════════════════════════════════ */
-function keywordDetect(text, genre){
+function keywordDetect(text,genre){
   var t=text.toLowerCase();
-  var result={env:null,props:[],holding:'none',pose:'standing',mood:null,lighting:'ambient',timeOfDay:'day'};
+  var result={env:null,props:[],holding:'none',pose:'standing',mood:null,lighting:'ambient',timeOfDay:'day',twoChars:false};
 
-  // ── SPECIFIC LOCATIONS (most specific first) ──
-  if(/departure gate|boarding gate|gate [a-z]\d|flight to|airport terminal|runway|check-in|security line|baggage claim|flight board/.test(t)){result.env='airport';result.props.push('departure_board','gate_seating','luggage');}
-  else if(/hospital|emergency room|\\bward\\b|\\bicu\\b|nurses? station|operating room|vending machine.*hospital|fluorescent.*corridor|waiting room/.test(t)){result.env='hospital';result.props.push('corridor','fluorescent_lights');}
-  else if(/\\bcafé\\b|\\bcafe\\b|coffee shop|espresso|barista|\\bdiner\\b|the counter.*coffee|table.*coffee|\\bchalkboard menu|sitting.*coffee/.test(t)){result.env='cafe';result.props.push('counter','coffee_cups');}
-  else if(/restaurant|dining room|candlelit table|white tablecloth|menu|waiter|sommelier/.test(t)){result.env='restaurant';result.props.push('dining_table','candles');}
-  else if(/\\bbar\\b|bartender|whiskey|\\bpub\\b|\\btavern\\b|\\bbeer\\b|gin|bourbon|neon.*bar|bar stool/.test(t)){result.env='bar';result.props.push('bar_counter','bottles');}
-  else if(/courtroom|witness stand|\\bjudge\\b|\\bjury\\b|\\bgavel\\b|objection|defense|prosecution/.test(t)){result.env='courtroom';result.props.push('bench','gallery');}
-  else if(/library|bookshelf|\\barchive\\b|reading room|card catalog/.test(t)){result.env='library';result.props.push('bookshelves','reading_lamp');}
-  else if(/\\bbedroom\\b|lying in bed|woke up|\\bpillow\\b|\\bduvet\\b|\\bnightstand\\b|alarm clock|bedroom window/.test(t)){result.env='bedroom';result.props.push('bed','window');}
-  else if(/living room|\\bsofa\\b|\\bcouch\\b|tv remote|coffee table/.test(t)){result.env='living_room';result.props.push('sofa','coffee_table');}
-  else if(/\\bkitchen\\b|granite counter|\\bcooking\\b|\\bstove\\b|refrigerator|\\bfridge\\b|sink/.test(t)){result.env='kitchen';result.props.push('counter','appliances');}
-  else if(/\\boffice\\b|conference room|\\bdesk\\b|\\bcubicle\\b|boardroom|business meeting|\\bsuit\\b.*office/.test(t)){result.env='office';result.props.push('desk','chairs');}
-  else if(/\\bchurch\\b|\\bcathedral\\b|\\bchapel\\b|pews|altar|stained glass/.test(t)){result.env='church';result.props.push('pews','altar');}
-  else if(/police station|interrogation room|holding cell|detective.*office/.test(t)){result.env='police_station';result.props.push('desk','handcuffs');}
-  // ── OUTDOOR ──
-  else if(/\\bforest\\b|among the trees|pine trees|oak trees|\\bwoods\\b|through the forest/.test(t)){result.env='forest';}
-  else if(/\\bcastle\\b|great hall|throne room|stone corridor|dungeon|fortress/.test(t)){result.env='castle';}
-  else if(/\\bcity\\b|city street|alley|neon|skyline|downtown|apartment building|\\bfire escape\\b/.test(t)){result.env='city';}
-  else if(/\\bmountain\\b|mountain top|summit|cliff|ridge|\\bpeak\\b/.test(t)){result.env='mountain';}
-  else if(/\\bocean\\b|\\bsea\\b|beach|shoreline|\\bcoast\\b|\\bwaves\\b|\\bharbor\\b/.test(t)){result.env='coast';}
-  else if(/\\bdesert\\b|sand dunes|arid|wasteland/.test(t)){result.env='desert';}
-  else if(/\\bcave\\b|cavern|underground/.test(t)){result.env='cave';}
-  else if(/\\bruins\\b|rubble|abandoned|broken walls/.test(t)){result.env='ruins';}
-  // ── GENRE FALLBACK (smart defaults, not lazy ones) ──
-  else{
-    var gd={romance:'living_room',thriller:'city',horror:'forest',scifi:'city',fantasy:'castle',
-            noir:'bar',mystery:'office',survival:'forest',supernatural:'forest',
-            historical:'castle',isekai:'castle'};
+  // ── SETTING DETECTION (order: most specific first) ──
+  // Each uses simple substring matching — no word boundaries needed
+
+  // Airport
+  if(/departure gate|boarding gate|flight to |airport terminal|runway|check-in|security line|baggage claim|flight board|gate [a-z]\d/.test(t)){
+    result.env='airport'; result.props.push('departure_board','gate_seating','luggage');
+
+  // Hospital / clinic
+  }else if(/hospital|emergency room|nurses? station|operating room|waiting room|clinic|patient room|medical|ambulance/.test(t)){
+    result.env='hospital'; result.props.push('corridor','fluorescent_lights','medical_equipment');
+
+  // Diner / cafe / coffee shop (very broad — catches all variants)
+  }else if(/\bdiner\b|diner's|formica|greasy spoon|coffee shop|espresso|barista|\bcafe\b|café|coffee counter|lunch counter|booth|the waitress|the waiter|short-order|jukebox|diner counter/.test(t)){
+    result.env='cafe'; result.props.push('counter','coffee_cups','stools');
+
+  // Restaurant (more formal than diner)
+  }else if(/restaurant|dining room|candlelit table|white tablecloth|sommelier|maître d|reservation/.test(t)){
+    result.env='restaurant'; result.props.push('dining_table','candles','wine_glasses');
+
+  // Bar / pub
+  }else if(/\bbar\b|bartender|whiskey glass|bourbon|scotch|\bpub\b|\btavern\b|neon sign.*bar|bar stool|behind the bar|liquor/.test(t)){
+    result.env='bar'; result.props.push('bar_counter','bottles','bar_stools');
+
+  // Courtroom
+  }else if(/courtroom|witness stand|\bjudge\b|\bjury\b|\bgavel\b|objection|defense counsel|prosecution|in the dock/.test(t)){
+    result.env='courtroom'; result.props.push('bench','gallery','judge_bench');
+
+  // Library
+  }else if(/library|bookshelf|bookshelves|\barchive\b|reading room|card catalog|librarian/.test(t)){
+    result.env='library'; result.props.push('bookshelves','reading_lamp','books');
+
+  // Bedroom
+  }else if(/\bbedroom\b|lying in bed|woke up|\bpillow\b|\bduvet\b|\bnightstand\b|alarm clock|fell asleep|under the covers|beneath the sheets/.test(t)){
+    result.env='bedroom'; result.props.push('bed','window','lamp');
+
+  // Living room
+  }else if(/living room|\bsofa\b|\bcouch\b|tv remote|coffee table|the couch|the sofa|armchair|on the couch/.test(t)){
+    result.env='living_room'; result.props.push('sofa','coffee_table','lamp');
+
+  // Kitchen
+  }else if(/\bkitchen\b|granite counter|stove top|\bfridge\b|refrigerator|kitchen counter|kitchen table|cooking|the sink/.test(t)){
+    result.env='kitchen'; result.props.push('counter','appliances','sink');
+
+  // Office / boardroom
+  }else if(/\boffice\b|conference room|boardroom|cubicle|business meeting|open plan|the desk|his desk|her desk/.test(t)){
+    result.env='office'; result.props.push('desk','chairs','computer');
+
+  // Police station / interrogation
+  }else if(/police station|interrogation room|holding cell|detective.{0,15}office|precinct/.test(t)){
+    result.env='police_station'; result.props.push('metal_table','one_way_glass');
+
+  // Church / cathedral
+  }else if(/\bchurch\b|\bcathedral\b|\bchapel\b|pews|altar|stained glass|the nave|confession/.test(t)){
+    result.env='church'; result.props.push('pews','altar','stained_glass');
+
+  // Train / subway
+  }else if(/train car|train station|subway|metro|platform|locomotive|railway carriage/.test(t)){
+    result.env='train'; result.props.push('seats','windows','aisle');
+
+  // Car / vehicle
+  }else if(/inside the car|in the car|rear seat|backseat|windshield|dashboard|steering wheel|passenger seat/.test(t)){
+    result.env='car'; result.props.push('seats','dashboard','windshield');
+
+  // ── OUTDOOR SETTINGS ──
+  }else if(/\bforest\b|among the trees|pine trees|oak trees|\bwoods\b|through the trees|canopy|underbrush/.test(t)){
+    result.env='forest';
+  }else if(/\bcastle\b|great hall|throne room|stone corridor|dungeon|fortress|battlements|stone walls/.test(t)){
+    result.env='castle';
+  }else if(/city street|alleyway|\bneon\b|skyline|downtown|apartment building|fire escape|urban|sidewalk|streetlight|parking lot/.test(t)){
+    result.env='city';
+  }else if(/\bmountain\b|mountain top|summit|cliff edge|\bridge|mountain pass/.test(t)){
+    result.env='mountain';
+  }else if(/\bocean\b|\bsea\b|beach|shoreline|\bcoast\b|crashing waves|\bharbor\b|pier/.test(t)){
+    result.env='coast';
+  }else if(/\bdesert\b|sand dunes|arid|scorching|wasteland/.test(t)){
+    result.env='desert';
+  }else if(/\bcave\b|cavern|underground|stalagmite|stalactite/.test(t)){
+    result.env='cave';
+  }else if(/\bruins\b|rubble|abandoned building|crumbling walls|overgrown/.test(t)){
+    result.env='ruins';
+
+  // ── SMART GENRE FALLBACK ──
+  }else{
+    var gd={romance:'living_room',thriller:'bar',horror:'forest',scifi:'city',
+            fantasy:'castle',noir:'bar',mystery:'office',survival:'forest',
+            supernatural:'forest',historical:'castle',isekai:'castle',random:'city'};
     result.env=gd[genre]||'living_room';
   }
 
-  // ── PROPS from text ──
-  if(/contract|document|paper|letter|note|envelope|manuscript/.test(t))result.props.push('document');
-  if(/\\bphone\\b|text message|\\bscreeen\\b|buzzing|notification/.test(t))result.props.push('phone');
-  if(/\\bcup\\b|\\bmug\\b|coffee|tea|\\bdrink\\b|glass of/.test(t))result.props.push('cup');
-  if(/\\bgun\\b|\\bknife\\b|\\bsword\\b|\\bweapon\\b|pistol|blade/.test(t))result.props.push('weapon');
-  if(/\\bbook\\b|novel|manuscript|reading/.test(t))result.props.push('book');
-  if(/\\bcandle\\b|candlelight|flickering/.test(t))result.props.push('candles');
-  if(/\\brain\\b|raining|downpour|umbrella|wet/.test(t))result.props.push('rain');
-  if(/\\bsnow\\b|snowing|snowfall/.test(t))result.props.push('snow');
-  if(/\\bfire\\b|fireplace|flames/.test(t))result.props.push('fireplace');
-  if(/\\bwindow\\b|staring out|looking through/.test(t))result.props.push('window');
-  if(/\\btable\\b|\\bdesk\\b|counter/.test(t))result.props.push('table');
+  // ── PROPS ──
+  if(/contract|document|papers|envelope|manuscript|file folder|briefcase/.test(t))result.props.push('document');
+  if(/phone|text message|buzzing|notification|cell phone|smartphone/.test(t))result.props.push('phone');
+  if(/\bcup\b|\bmug\b|coffee|tea|espresso|cappuccino|drink|glass of water/.test(t))result.props.push('cup');
+  if(/\bgun\b|\bknife\b|\bsword\b|\bweapon\b|pistol|blade|revolver|rifle/.test(t))result.props.push('weapon');
+  if(/\bbook\b|novel|reading|paperback|hardcover/.test(t))result.props.push('book');
+  if(/candle|candlelight|flickering flame/.test(t))result.props.push('candles');
+  if(/\brain\b|raining|downpour|umbrella|wet pavement|streaked/.test(t))result.props.push('rain');
+  if(/\bsnow\b|snowing|snowfall|blizzard/.test(t))result.props.push('snow');
+  if(/fireplace|hearth|flames|crackling fire/.test(t))result.props.push('fireplace');
+  if(/\bwindow\b|glass pane|staring out|looking through/.test(t))result.props.push('window');
 
   // ── HOLDING ──
-  if(/holding.*letter|letter.*hand|tearing.*open|envelope|staring.*paper|staring.*contract/.test(t))result.holding='document';
-  else if(/holding.*phone|phone.*hand|staring.*phone|\\btexted\\b/.test(t))result.holding='phone';
-  else if(/holding.*cup|cup.*hand|coffee.*hands|mug.*hands/.test(t))result.holding='cup';
-  else if(/drew.*gun|raised.*gun|gun.*hand|knife.*hand/.test(t))result.holding='weapon';
+  if(/holding.*letter|holding.*paper|letter.*hand|tearing.*open|staring.*paper/.test(t))result.holding='document';
+  else if(/holding.*phone|phone.*hand|staring.*phone|texted|typed a message/.test(t))result.holding='phone';
+  else if(/holding.*cup|cup.*hand|coffee.*hands|mug.*hands|clutching.*mug/.test(t))result.holding='cup';
+  else if(/drew.*gun|raised.*gun|gun.*hand|knife.*hand|aimed/.test(t))result.holding='weapon';
   else if(/reached for|grabbed|picked up/.test(t)){
     if(/document|paper|letter/.test(t))result.holding='document';
     else if(/phone/.test(t))result.holding='phone';
-    else if(/cup|coffee/.test(t))result.holding='cup';
+    else if(/cup|coffee|mug/.test(t))result.holding='cup';
   }
 
   // ── POSE ──
-  if(/sat down|sitting|\\bseated\\b|sat on|perched on|slumped in/.test(t))result.pose='sitting';
-  else if(/ran|running|sprinting|fleeing|rushing/.test(t))result.pose='running';
-  else if(/crouching|kneeling|\\bknelt\\b|bent over/.test(t))result.pose='crouching';
-  else if(/\\bfacing\\b|turned toward|turned away|facing the window/.test(t))result.pose='facing_away';
-  else if(/reaching for|stretched out|leaned in/.test(t))result.pose='reaching';
+  if(/sat down|sitting|seated|sat on|perched on|slumped in|at the counter|at the bar|in a booth/.test(t))result.pose='sitting';
+  else if(/ran|running|sprinting|fleeing|rushing|bolted/.test(t))result.pose='running';
+  else if(/crouching|kneeling|\bknelt\b|bent over|ducked/.test(t))result.pose='crouching';
+  else if(/facing.*window|turned away|back to the|facing the wall/.test(t))result.pose='facing_away';
+  else if(/reaching for|stretched out|leaned in|leaned over/.test(t))result.pose='reaching';
 
   // ── MOOD ──
-  if(/crying|tears|wept|sob|grief|mourning/.test(t))result.mood='grief';
-  else if(/terrified|horror|dread|fear|afraid|panic/.test(t))result.mood='dread';
-  else if(/tense|nervous|cautious|watching|wary/.test(t))result.mood='tension';
-  else if(/longing|ached|miss|wish|remembered|five years/.test(t))result.mood='longing';
-  else if(/rage|fury|anger|furious/.test(t))result.mood='anger';
-  else if(/hope|relief|safe|joy|smiled/.test(t))result.mood='hope';
-  else if(/warm|tender|comfort|soft|gentle/.test(t))result.mood='warmth';
-  else if(/wonder|amazed|curious|stared in awe/.test(t))result.mood='wonder';
-  else{var md={romance:'longing',thriller:'tension',horror:'dread',scifi:'wonder',fantasy:'wonder',noir:'despair',mystery:'tension',survival:'hope',supernatural:'dread',isekai:'wonder',historical:'tension'};result.mood=md[genre]||'tension';}
+  if(/crying|tears|wept|\bsob\b|grief|mourning|devastat/.test(t))result.mood='grief';
+  else if(/terrified|horror|\bdread\b|\bfear\b|afraid|panic|screamed/.test(t))result.mood='dread';
+  else if(/tense|nervous|cautious|watching|wary|trembling|on edge/.test(t))result.mood='tension';
+  else if(/longing|ached|miss|wish|remembered|yearned/.test(t))result.mood='longing';
+  else if(/rage|fury|anger|furious|slammed|threw/.test(t))result.mood='anger';
+  else if(/hope|relief|\bsafe\b|\bjoy\b|smiled|laughed/.test(t))result.mood='hope';
+  else if(/warm|tender|comfort|\bsoft\b|\bgentle\b|peaceful/.test(t))result.mood='warmth';
+  else if(/wonder|amazed|curious|awe|marveled/.test(t))result.mood='wonder';
+  else{var md={romance:'longing',thriller:'tension',horror:'dread',scifi:'wonder',fantasy:'wonder',noir:'despair',mystery:'tension',survival:'hope',supernatural:'dread',isekai:'wonder',historical:'tension',random:'tension'};result.mood=md[genre]||'tension';}
 
   // ── LIGHTING ──
-  if(/fluorescent|office light|strip light|bright white/.test(t))result.lighting='fluorescent';
+  if(/fluorescent|office light|strip light|clinical white|bright white|harsh light/.test(t))result.lighting='fluorescent';
   else if(/candlelight|flickering candle|by the fire|firelight/.test(t))result.lighting='candlelit';
-  else if(/moonlight|moonlit|night sky/.test(t))result.lighting='moonlit';
-  else if(/golden hour|sunset|sunrise|warm light slant/.test(t))result.lighting='golden';
-  else if(/dim|shadowy|low light|barely lit/.test(t))result.lighting='dim';
+  else if(/moonlight|moonlit|night sky|silver light/.test(t))result.lighting='moonlit';
+  else if(/golden hour|sunset|sunrise|warm light|slanting light/.test(t))result.lighting='golden';
+  else if(/dim|shadowy|low light|barely lit|in the dark|sodium|sick yellow|murky/.test(t))result.lighting='dim';
+  else if(/bright|blazing|harsh sun|spotlight/.test(t))result.lighting='bright';
 
   // ── TIME ──
-  if(/dawn|sunrise|early morning/.test(t))result.timeOfDay='dawn';
-  else if(/afternoon|midday|noon/.test(t))result.timeOfDay='day';
-  else if(/evening|dusk|sunset/.test(t))result.timeOfDay='dusk';
-  else if(/night|midnight|dark/.test(t))result.timeOfDay='night';
+  if(/dawn|sunrise|early morning|first light/.test(t))result.timeOfDay='dawn';
+  else if(/afternoon|midday|noon|high sun/.test(t))result.timeOfDay='day';
+  else if(/evening|dusk|sunset|twilight/.test(t))result.timeOfDay='dusk';
+  else if(/night|midnight|\bdark\b|after dark|streetlights/.test(t))result.timeOfDay='night';
+
+  // ── WEATHER ──
+  result.weather='clear';
+  if(/rain|raining|downpour|drizzle|wet|puddle/.test(t))result.weather='rain';
+  else if(/snow|snowing|blizzard|frozen/.test(t))result.weather='snow';
+  else if(/fog|mist|misty|overcast/.test(t))result.weather='fog';
 
   // ── TWO CHARACTERS ──
-  var twoChars=/both of them|each other|she and he|he and she|two of them|the two|facing each other|between them/.test(t);
-  result.twoChars=twoChars;
+  result.twoChars=/both of them|each other|she and he|he and she|the two of them|facing each other|between them|sat across|sat opposite/.test(t);
 
   return result;
 }
@@ -1497,7 +1721,7 @@ async function extractScene(text, genre, tone){
     '- setting: pick what the text LITERALLY describes.',
     '- airport: any mention of departure gate, flight, terminal, boarding, runway.',
     '- hospital: doctor, nurse, vending machine in hallway, ward, fluorescent corridor.',
-    '- cafe: espresso, barista, coffee shop, diner, booth.',
+    '- cafe: espresso, barista, coffee shop, diner, booth, formica, waitress, mug, greasy spoon, lunch counter.',
     '- bedroom: bed, woke up, nightstand, pillow.',
     '- bar: bartender, whiskey, pub, tavern, neon sign.',
     '- props: list 2-5 specific objects visible in THIS scene.',
@@ -1517,7 +1741,8 @@ async function extractScene(text, genre, tone){
                'restaurant':'restaurant','bar':'bar','hospital':'hospital','airport':'airport',
                'library':'library','courtroom':'courtroom','church':'church','police_station':'police_station',
                'forest':'forest','castle':'castle','city':'city','coast':'coast','mountain':'mountain',
-               'desert':'desert','cave':'cave','ruins':'ruins','train':'office','car':'living_room'};
+               'desert':'desert','cave':'cave','ruins':'ruins','train':'train','car':'car',
+               'diner':'cafe','coffee_shop':'cafe','police':'police_station','precinct':'police_station'};
       parsed.env=MAP[parsed.setting]||kw.env;
       // Keyword override wins for these settings (100% reliable)
       var HARD_SETTINGS=['airport','hospital','cafe','bar','restaurant','courtroom','police_station','bedroom','library'];
@@ -2568,91 +2793,98 @@ function buildIllustrationPrompt(paragraph,genre,sd){
   var holding=(sd&&sd.holding)||'none';
   var pose=(sd&&sd.pose)||'standing';
   var weather=(sd&&sd.weather)||'clear';
+  var lighting=(sd&&sd.lighting)||'ambient';
   var twoChars=sd&&sd.twoChars;
+  var timeOfDay=(sd&&sd.timeOfDay)||'day';
 
-  // -- SUBJECT (who/what) --
-  var subject;
+  // Story text anchor — first 100 chars, stripped of punctuation
+  var story=paragraph.replace(/\s+/g,' ').trim().slice(0,100);
+
+  // ── ANIMATED STYLE per genre ──
+  // Each genre gets a specific animation studio reference for consistency
+  var ANIM_STYLE={
+    romance:   'Studio Ghibli inspired romantic anime illustration, soft watercolor backgrounds, warm pastel palette, expressive characters with large eyes, hand-drawn feel',
+    thriller:  'Dark moody animated thriller, Satoshi Kon style, high contrast, desaturated urban palette, sharp angular linework, cinematic noir atmosphere',
+    horror:    'Dark horror anime illustration, haunting atmosphere, deep shadows, Junji Ito inspired linework, unsettling composition, muted grey-green palette',
+    scifi:     'Cyberpunk anime illustration, Ghost in the Shell style, neon-lit environment, detailed mechanical and architectural elements, blue-teal-purple palette',
+    mystery:   'Mystery anime illustration, atmospheric and moody, Detective Conan style, soft shadows, warm amber-sepia tones, detailed interior backgrounds',
+    noir:      'Film noir anime, monochromatic with gold accents, 1940s fashion, rain-slicked streets, deep dramatic shadows, cigarette smoke, jazz club atmosphere',
+    supernatural:'Dark supernatural anime, Demon Slayer style linework, ethereal glowing effects, purple-blue otherworldly palette, dramatic dynamic composition',
+    historical:'Historical anime illustration, Rurouni Kenshin era aesthetics, period accurate details, warm earth tones, painterly ink-wash style backgrounds',
+    isekai:    'Isekai fantasy anime, vibrant Sword Art Online style, lush magical world, saturated bright colors, epic fantasy architecture, glowing magical effects',
+    fantasy:   'High fantasy anime illustration, FMAB style, dramatic lighting, rich jewel-tone palette, ornate detailed environments, epic composition',
+    survival:  'Post-apocalyptic anime, Attack on Titan style grit, realistic proportions, muted green-grey tones, harsh environment details, worn textures',
+    random:    'High quality anime illustration, detailed backgrounds, expressive characters, cinematic composition, professional digital art'
+  };
+  var animStyle=ANIM_STYLE[g]||ANIM_STYLE.random;
+
+  // ── SETTING — very specific animated backgrounds ──
+  var SETTING={
+    cafe:       'animated diner interior background, worn vinyl booths, formica counter with chrome stools, neon sign glow through window, coffee stains on table, grease-stained windows reflecting street lights',
+    restaurant: 'animated upscale restaurant interior, white tablecloths, flickering candles, wine glasses, dark wood paneling, soft warm lighting',
+    bar:        'animated dimly lit bar interior, rows of bottles on backlit shelves, neon beer signs, worn wooden barstools, hazy smoke atmosphere',
+    hospital:   'animated hospital interior background, sterile white corridor, fluorescent overhead lights casting harsh shadows, green linoleum floor, nurses station in background',
+    airport:    'animated airport terminal interior, high ceiling with departure boards, large windows showing runway, rows of plastic seats, travelers with luggage',
+    office:     'animated modern office interior, glass walls, computers on desks, city skyline visible through large windows, overhead fluorescent lighting',
+    library:    'animated grand library interior, towering bookshelves reaching ceiling, warm reading lamps, wooden study tables, dust motes in light shafts',
+    bedroom:    'animated bedroom interior, unmade bed with rumpled sheets, curtains filtering soft light, cluttered nightstand, personal items on shelves',
+    living_room:'animated cozy living room interior, sofa with cushions, soft lamp glow, bookshelves, rain against window in background',
+    kitchen:    'animated kitchen interior, cluttered countertops, overhead fluorescent humming, morning light through window over sink, mugs and dishes',
+    courtroom:  'animated courtroom interior, high ceilings, wooden gallery benches, raised judges bench with imposing seal, fluorescent lighting',
+    church:     'animated cathedral interior, long rows of wooden pews, towering stained glass windows with colored light beams, stone arches disappearing into shadow',
+    police_station:'animated interrogation room interior, bare concrete walls, single hanging bulb, metal table with two chairs, one-way mirror reflection',
+    train:      'animated train carriage interior at night, seat upholstery, windows showing dark landscape passing, overhead reading lights, empty aisle',
+    car:        'animated car interior, dashboard glow, windshield with rain streaks, rearview mirror, blurred street lights passing outside',
+    forest:     'animated forest background, tall ancient trees, shafts of golden light through canopy, mist at ground level, detailed undergrowth',
+    castle:     'animated medieval castle interior, torchlit stone corridor, tapestries on rough stone walls, arched windows with iron bars, flickering shadows',
+    city:       'animated city street background, rain-wet pavement reflecting neon signs, brick apartment buildings with fire escapes, yellow streetlights, midnight atmosphere',
+    coast:      'animated coastal scene, dramatic rocky cliffs, crashing ocean waves with spray, stormy sky, lighthouse beam in distance',
+    mountain:   'animated mountain landscape, snow-capped peaks, dramatic storm clouds, pine forest below, wind moving through grass',
+    desert:     'animated desert landscape, endless sand dunes, harsh midday sun, heat shimmer distortion, cracked earth in foreground, distant mesa',
+    cave:       'animated cave interior, rough stone walls, glowing bioluminescent crystals, underground pool reflecting light, stalactites above',
+    ruins:      'animated ancient ruins, crumbling stone walls covered in vines, atmospheric mist, moonlight through broken roof, overgrown courtyard'
+  };
+  var setting=SETTING[env]||SETTING.living_room;
+
+  // ── ANIMATED CHARACTER DESCRIPTION ──
+  var charDesc;
   if(twoChars){
-    subject='two people, '+pose+', facing each other';
-  } else {
-    subject='a person, '+pose;
-    if(holding!=='none') subject+=', holding a '+holding;
+    charDesc='two anime-style characters, '+pose+', facing each other, expressive faces, detailed character design';
+  }else{
+    charDesc='one anime-style character, '+pose+(holding&&holding!=='none'?', holding a '+holding:'')+', expressive detailed character design, visible from waist up';
   }
 
-  // -- SETTING (where) --
-  var settingMap={
-    living_room:'inside a cozy living room, warm interior lighting',
-    kitchen:'inside a modern kitchen, granite countertops, overhead lights',
-    bedroom:'inside a bedroom, soft bedside lamp, curtains',
-    cafe:'inside a warm cafe, wooden tables, espresso machine in background, chalkboard menu',
-    hospital:'inside a hospital corridor, fluorescent lights, linoleum floor, vending machine',
-    airport:'inside an airport terminal, large windows, departure boards, rows of seats, tarmac visible outside',
-    office:'inside a modern office, desk, computer screens, city view through window',
-    library:'inside a grand library, towering bookshelves floor to ceiling, reading lamps',
-    bar:'inside a dark bar, neon signs, bottles behind counter, bar stools',
-    restaurant:'inside an elegant restaurant, candlelit tables, white tablecloths',
-    courtroom:'inside a courtroom, wooden benches, judge\'s bench, high ceilings',
-    church:'inside a cathedral, stained glass windows, pews, altar',
-    forest:'in a dense atmospheric forest, shafts of light through trees',
-    castle:'at a dramatic medieval castle, stone towers, battlements, moody sky',
-    city:'on a city street at night, neon lights reflecting on wet pavement, tall buildings',
-    coast:'on a dramatic coastline, crashing ocean waves, rocky cliffs',
-    mountain:'on a mountain summit, dramatic sky, vast landscape below',
-    desert:'in a vast desert, sand dunes, harsh sun, heat shimmer',
-    cave:'inside a dark cave, glowing crystals, stalactites, mysterious light',
-    ruins:'among ancient stone ruins, overgrown with vines, atmospheric mist'
+  // ── MOOD COLORING ──
+  var MOOD_COLOR={
+    grief:     'desaturated blue-grey color grading, heavy atmosphere, subtle rain',
+    dread:     'deep shadow color grading, cold blue-green tones, oppressive atmosphere',
+    tension:   'high contrast dramatic lighting, sharp shadows, cinematic tension',
+    longing:   'warm golden-amber soft light, hazy nostalgic atmosphere',
+    anger:     'harsh orange-red side lighting, stark shadows, intense color',
+    hope:      'warm golden light rays breaking through, uplifting bright atmosphere',
+    warmth:    'soft warm amber glow, intimate cozy lighting, gentle shadows',
+    wonder:    'ethereal magical glow, sparkle effects, soft blue-white light',
+    despair:   'cold grey desaturated, heavy shadows, rain atmosphere',
+    love:      'warm rose-pink soft light, bokeh background lights, romantic atmosphere'
   };
-  var setting=settingMap[env]||'in an atmospheric location';
+  var moodColor=MOOD_COLOR[mood]||'cinematic dramatic lighting, atmospheric';
 
-  // -- MOOD LIGHTING --
-  var lightingMap={
-    longing:'soft melancholy golden light, hazy atmosphere',
-    tension:'harsh dramatic shadows, high contrast lighting',
-    dread:'dark oppressive shadows, cold blue-grey light',
-    grief:'overcast muted light, desaturated colors',
-    hope:'warm golden light breaking through, uplifting',
-    warmth:'soft warm amber light, intimate and cozy',
-    wonder:'ethereal glowing light, magical atmosphere',
-    anger:'harsh red-orange lighting, intense shadows',
-    despair:'cold grey light, heavy shadows',
-    love:'warm rose-gold light, soft and romantic'
-  };
-  var lighting=lightingMap[mood]||'cinematic dramatic lighting';
+  // ── TIME AND WEATHER ──
+  var timeStr={dawn:'early dawn light, blue hour before sunrise',day:'',dusk:'golden hour dusk, long warm shadows',night:'night atmosphere, artificial light only, deep shadows'}[timeOfDay]||'';
+  var weatherStr={rain:'visible rain drops, wet reflections, rain-streaked glass',snow:'snowflakes falling gently, frost and cold atmosphere',fog:'thick atmospheric fog, misty low visibility',clear:''}[weather]||'';
 
-  // -- WEATHER --
-  var weatherStr='';
-  if(weather==='rain') weatherStr='heavy rain falling, wet reflections on ground, ';
-  else if(weather==='snow') weatherStr='snow falling gently, winter atmosphere, ';
-  else if(weather==='fog') weatherStr='thick atmospheric fog and mist, ';
-
-  // -- GENRE STYLE --
-  var styleMap={
-    romance:'romantic storybook illustration, soft painterly style, warm tones, detailed characters',
-    thriller:'dark thriller illustration, noir atmosphere, high contrast, gritty realism',
-    horror:'dark horror illustration, gothic, unsettling atmosphere, desaturated palette',
-    scifi:'science fiction illustration, futuristic, neon lighting, detailed technical art',
-    mystery:'mystery noir illustration, moody shadows, sepia tones, atmospheric',
-    noir:'film noir illustration, 1940s style, black and white with gold accents',
-    supernatural:'supernatural dark fantasy illustration, ethereal glowing effects, mysterious',
-    historical:'historical period illustration, painterly, detailed costumes and architecture',
-    isekai:'vibrant isekai fantasy illustration, anime-influenced, magical world, detailed',
-    fantasy:'epic fantasy illustration, painterly, rich colors, detailed magical world',
-    survival:'gritty survival illustration, realistic, harsh environment, worn details',
-    random:'cinematic illustrated scene, detailed, painterly, professional quality'
-  };
-  var style=styleMap[g]||'detailed cinematic illustration';
-
-  // Build final FLUX prompt — structured for best results
-  // Format: [style], [subject], [setting], [lighting/weather], [quality tags]
-  var parts=[
-    style,
-    subject,
+  // ── FINAL PROMPT ──
+  // Lead with animation style, then scene context, setting, character, mood, quality
+  return [
+    animStyle,
+    'scene depicting: '+story,
     setting,
-    weatherStr+lighting,
-    'ultra detailed, high quality, sharp focus, professional digital art, 16:9 composition'
-  ];
-
-  return parts.join(', ');
+    charDesc,
+    moodColor,
+    timeStr,
+    weatherStr,
+    'masterful anime background art, ultra detailed, no text overlay, no watermarks, no subtitles, wide 16:9 cinematic frame, professional animation studio quality'
+  ].filter(Boolean).join(', ');
 }
 
 function buildGeminiRequest(prompt){
