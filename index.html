@@ -1976,30 +1976,62 @@ function paintTable(ctx,x,y,w,h,col,ink,olw){
 // ── LIVING ROOM ──
 function paintLivingRoom(ctx,W,H,p,ink,olw,R,sd){
   var props=sd&&sd.props||[];
-  paintInteriorBase(ctx,W,H,p.wall||lerp(p.sky[0],p.ground,.06),p.floor||lerp(p.ground,p.rock,.18),ink,olw);
-  paintWindow(ctx,W,H,W*.55,H*.08,W*.34,H*.38,p.sky[0],ink,olw,true);
-  // Sofa
-  var sw=W*.42,sy=H*.52;
-  filledRect(ctx,W*.04,sy,sw,H*.15,p.flora[0],ink,olw);
-  // Cushions
-  for(var c=0;c<2;c++)filledRect(ctx,W*(.05+c*sw*.53),sy+H*.01,sw*.5,H*.08,lerp(p.flora[0],p.flora[1],.3),ink,olw*.7);
+  var wall=p.wall||lerp(p.sky[0],p.ground,.06);
+  var floor=p.floor||lerp(p.ground,p.rock,.18);
+  paintInteriorBase(ctx,W,H,wall,floor,ink,olw);
+  // Baseboard
+  filledRect(ctx,0,H*.78,W,H*.03,lerp(floor,ink,.15),ink,olw*.4);
+  // Large window with curtains
+  paintWindow(ctx,W,H,W*.55,H*.06,W*.36,H*.44,p.sky[0],ink,olw,true);
+  // Curtains
+  filledRect(ctx,W*.51,H*.06,W*.06,H*.46,alpha(p.flora[0],.7),ink,olw*.6);
+  filledRect(ctx,W*.91,H*.06,W*.06,H*.46,alpha(p.flora[0],.7),ink,olw*.6);
+  // Wall picture frame
+  filledRect(ctx,W*.1,H*.1,W*.2,H*.28,lerp(wall,ink,.1),ink,olw*.8);
+  filledRect(ctx,W*.11,H*.11,W*.18,H*.25,lerp(p.sky[0],p.accent,.3),ink,olw*.3);
+  // Sofa — wider and more detailed
+  var sw=W*.46,sx=W*.02,sy=H*.53;
+  filledRect(ctx,sx,sy,sw,H*.18,p.flora[0],ink,olw);
+  // Sofa back
+  filledRect(ctx,sx,sy-H*.08,sw,H*.1,lerp(p.flora[0],p.flora[1],.25),ink,olw*.8);
   // Sofa arms
-  filledRect(ctx,W*.04,sy-H*.04,sw*.07,H*.19,p.flora[0],ink,olw*.8);
-  filledRect(ctx,W*.04+sw*.93,sy-H*.04,sw*.07,H*.19,p.flora[0],ink,olw*.8);
-  // Coffee table
-  if(props.indexOf('table')>-1||true){
-    paintTable(ctx,W*.48,H*.57,W*.1,H*.03,lerp(p.rock,p.ground,.4),ink,olw*.8);
+  filledRect(ctx,sx,sy-H*.09,sw*.06,H*.27,lerp(p.flora[0],p.flora[1],.15),ink,olw);
+  filledRect(ctx,sx+sw*.94,sy-H*.09,sw*.06,H*.27,lerp(p.flora[0],p.flora[1],.15),ink,olw);
+  // Cushions
+  for(var ci=0;ci<3;ci++){
+    filledRect(ctx,sx+sw*(.07+ci*.3),sy-H*.04,sw*.25,H*.12,lerp(p.flora[0],p.accent,.2+(ci*.1)),ink,olw*.6);
   }
+  // Coffee table
+  var tx=W*.5,ty=H*.62;
+  filledRect(ctx,tx,ty+H*.01,W*.17,H*.01,lerp(p.rock,ink,.3),ink,olw*.4); // leg shadow
+  filledRect(ctx,tx,ty,W*.18,H*.025,lerp(p.rock,p.ground,.4),ink,olw*.8);
+  // Coffee cup on table
+  if(props.indexOf('cup')>-1||true)drawCup(ctx,tx+W*.06,ty-H*.04,W*.018,ink,olw*.7,p.accent);
+  // Book on table
+  filledRect(ctx,tx+W*.1,ty-H*.018,W*.06,H*.016,p.accent,ink,olw*.5);
+  // Rug
+  ctx.beginPath();ctx.ellipse(W*.35,H*.74,W*.35,H*.06,0,0,Math.PI*2);
+  ctx.fillStyle=alpha(lerp(p.flora[0],p.ground,.5),.45);ctx.fill();
+  ctx.strokeStyle=ink;ctx.lineWidth=olw*.5;ctx.stroke();
+  // Floor lamp
+  line(ctx,W*.49,H*.25,W*.49,H*.78,ink,olw*.8);
+  circle(ctx,W*.49,H*.24,W*.025,lerp(p.light,'#fff',.4),ink,olw*.6);
+  // Ambient lamp glow
+  var lg=ctx.createRadialGradient(W*.49,H*.24,1,W*.49,H*.24,W*.22);
+  lg.addColorStop(0,alpha(p.light,.12));lg.addColorStop(1,alpha(p.light,0));
+  ctx.fillStyle=lg;ctx.fillRect(W*.27,0,W*.44,H*.7);
   // Fireplace if props
   if(props.indexOf('fireplace')>-1){
-    filledRect(ctx,W*.04,H*.3,W*.22,H*.3,lerp(p.rock,p.rock2,.4),ink,olw);
-    filledRect(ctx,W*.07,H*.38,W*.16,H*.2,'#181818',ink,olw);
-    // Flames
+    filledRect(ctx,W*.02,H*.25,W*.24,H*.32,lerp(p.rock,p.rock2,.4),ink,olw);
+    filledRect(ctx,W*.05,H*.33,W*.18,H*.22,'#181818',ink,olw);
     for(var fi=0;fi<8;fi++){
-      var fx=W*(.09+fi*.018),fh=H*(.04+Math.sin(fi)*0.02);
-      ctx.beginPath();ctx.moveTo(fx,H*.58);ctx.quadraticCurveTo(fx+W*.006,H*.58-fh*.6,fx,H*.58-fh);
-      ctx.strokeStyle=fi%2?p.accent:p.accent2;ctx.lineWidth=W*.007;ctx.stroke();
+      var fx2=W*(.06+fi*.02),fh2=H*(.04+Math.sin(fi)*0.02);
+      ctx.beginPath();ctx.moveTo(fx2,H*.55);ctx.quadraticCurveTo(fx2+W*.008,H*.55-fh2*.6,fx2,H*.55-fh2);
+      ctx.strokeStyle=fi%2?p.accent:p.accent2;ctx.lineWidth=W*.01;ctx.stroke();
     }
+    var fg=ctx.createRadialGradient(W*.14,H*.44,1,W*.14,H*.44,W*.18);
+    fg.addColorStop(0,alpha(p.accent,.18));fg.addColorStop(1,alpha(p.accent,0));
+    ctx.fillStyle=fg;ctx.fillRect(0,H*.2,W*.35,H*.45);
   }
 }
 
@@ -2067,40 +2099,61 @@ function paintBedroom(ctx,W,H,p,ink,olw,R,sd){
 // ── CAFE ──
 function paintCafe(ctx,W,H,p,ink,olw,R,sd){
   var props=sd&&sd.props||[];
-  paintInteriorBase(ctx,W,H,lerp(p.sky[0],p.ground,.04),lerp(p.ground,p.rock,.12),ink,olw);
-  // Window
-  paintWindow(ctx,W,H,W*.06,H*.06,W*.26,H*.4,lerp(p.sky[0],'#c8dce8',.3),ink,olw,true);
-  // Counter back
-  filledRect(ctx,W*.32,H*.28,W*.66,H*.34,lerp(p.rock,p.ground,.3),ink,olw);
-  filledRect(ctx,W*.32,H*.26,W*.66,H*.04,lerp(p.rock2,p.ground,.3),ink,olw*.8);
-  // Espresso machine
-  filledRect(ctx,W*.44,H*.1,W*.26,H*.18,'#b8b0a8',ink,olw);
-  for(var d=0;d<3;d++)circle(ctx,W*(.5+d*.07),H*.19,W*.022,'#383830',ink,olw*.6);
-  filledRect(ctx,W*.5,H*.24,W*.14,H*.04,'#888',ink,olw*.7); // spout
-  // Mugs on shelf
-  var shelfY=H*.24;
-  line(ctx,W*.32,shelfY,W*.98,shelfY,ink,olw*.5);
-  for(var mi=0;mi<R.ri(3,6);mi++){
-    var mc=[p.accent,p.flora[0],p.rock,p.accent2||p.accent,'#e8e0d0'][mi%5];
-    filledRect(ctx,W*(.34+mi*.11),shelfY-H*.06,W*.08,H*.06,mc,ink,olw*.6);
-    // Handle nub
-    ctx.beginPath();ctx.arc(W*(.34+mi*.11)+W*.08,shelfY-H*.03,W*.015,-.5,Math.PI*.4);ctx.strokeStyle=ink;ctx.lineWidth=olw*.5;ctx.stroke();
+  var wall=p.wall||lerp(p.sky[0],p.ground,.05);
+  var floor=lerp(p.ground,p.rock,.2);
+  paintInteriorBase(ctx,W,H,wall,floor,ink,olw);
+  // Tile floor
+  for(var tx=0;tx<10;tx++){for(var ty=0;ty<3;ty++){
+    var tc=lerp(floor,tx%2===ty%2?ink:wall,.04);
+    filledRect(ctx,tx*W*.1,H*.7+ty*H*.1,W*.1,H*.1,tc,alpha(ink,.15),olw*.2);
+  }}
+  // Counter — back wall
+  filledRect(ctx,0,H*.35,W,H*.05,lerp(p.rock,p.ground,.25),ink,olw*.8);
+  filledRect(ctx,0,H*.4,W,H*.38,lerp(p.rock,p.ground,.15),ink,olw);
+  // Counter top surface
+  filledRect(ctx,0,H*.34,W,H*.025,lerp(p.rock2,'#e8e4dc',.4),ink,olw*.8);
+  // Stools at counter
+  for(var st=0;st<4;st++){
+    var sx=W*(.05+st*.22);
+    circle(ctx,sx,H*.56,W*.028,lerp(p.rock,'#4a3020',.3),ink,olw*.7);
+    line(ctx,sx,H*.56,sx,H*.72,ink,olw);
+    // Stool feet
+    line(ctx,sx-W*.02,H*.72,sx+W*.02,H*.72,ink,olw*.8);
   }
-  // Chalkboard
-  filledRect(ctx,W*.72,H*.04,W*.24,H*.2,'#282820',ink,olw);
-  ctx.strokeStyle='rgba(255,255,255,.4)';ctx.lineWidth=1;
-  for(var cl=0;cl<3;cl++){line(ctx,W*.75,H*(.08+cl*.055),W*.93,H*(.08+cl*.055),'rgba(255,255,255,.4)',1);}
-  // Tables
-  if(props.indexOf('table')>-1||true){
-    var tbl=[W*.08,H*.75];
-    paintTable(ctx,tbl[0],tbl[1],W*.2,H*.03,lerp(p.rock,p.ground,.4),ink,olw);
-    // Cups on table
-    drawCup(ctx,tbl[0]+W*.05,tbl[1]-H*.04,H*.04,ink,olw,'#3a2008');
-    drawCup(ctx,tbl[0]+W*.12,tbl[1]-H*.04,H*.04,ink,olw,'#3a2008');
+  // Coffee machine behind counter
+  filledRect(ctx,W*.12,H*.2,W*.14,H*.15,lerp(p.rock2,'#888',.4),ink,olw);
+  filledRect(ctx,W*.13,H*.21,W*.05,H*.08,'#c0b090',ink,olw*.6);
+  circle(ctx,W*.22,H*.26,W*.025,'#555',ink,olw*.5);
+  // Neon sign on back wall
+  ctx.font='bold '+Math.round(W*.025)+'px monospace';
+  ctx.textAlign='center';
+  var neonCol=p.accent||'#e87848';
+  ctx.strokeStyle=neonCol;ctx.lineWidth=olw*.4;ctx.shadowColor=neonCol;ctx.shadowBlur=8;
+  ctx.strokeText('OPEN',W*.5,H*.15);
+  ctx.shadowBlur=0;ctx.textAlign='left';
+  // Coffee cups on counter
+  for(var cc=0;cc<3;cc++)drawCup(ctx,W*(.35+cc*.18),H*.32,W*.016,ink,olw*.7,p.accent);
+  // Window — greasy, showing street
+  paintWindow(ctx,W,H,W*.68,H*.06,W*.26,H*.26,lerp(p.sky[1],ink,.2),ink,olw,false);
+  // Night street outside window
+  filledRect(ctx,W*.69,H*.07,W*.24,H*.24,'#0a0a14',null,0);
+  for(var nl=0;nl<3;nl++){
+    var nlx=W*(.72+nl*.07);
+    line(ctx,nlx,H*.07,nlx,H*.31,alpha(p.accent2,.3),olw*.4);
+    var nlg=ctx.createRadialGradient(nlx,H*.09,1,nlx,H*.09,W*.04);
+    nlg.addColorStop(0,alpha(p.accent2,.4));nlg.addColorStop(1,alpha(p.accent2,0));
+    ctx.fillStyle=nlg;ctx.fillRect(nlx-W*.04,H*.07,W*.08,H*.1);
   }
+  // Booths — left side
+  var boothY=H*.5;
+  filledRect(ctx,W*.02,boothY,W*.3,H*.04,lerp(p.rock,'#1a0e08',.3),ink,olw*.8); // table
+  filledRect(ctx,W*.02,boothY+H*.04,W*.3,H*.12,lerp(p.flora[0],'#8B2500',.5),ink,olw); // seat
+  filledRect(ctx,W*.02,boothY-H*.12,W*.3,H*.12,lerp(p.flora[0],'#8B2500',.4),ink,olw*.8); // back
+  // Coffee cups on booth table
+  drawCup(ctx,W*.09,boothY-H*.02,W*.016,ink,olw*.7,'#3a1a08');
+  drawCup(ctx,W*.2,boothY-H*.02,W*.016,ink,olw*.7,'#3a1a08');
 }
 
-// ── HOSPITAL ──
 function paintHospital(ctx,W,H,p,ink,olw,R,sd){
   var props=sd&&sd.props||[];
   // Corridor perspective
@@ -2216,41 +2269,91 @@ function paintAirport(ctx,W,H,p,ink,olw,R,sd){
 
 // ── BAR ──
 function paintBar(ctx,W,H,p,ink,olw,R,sd){
-  paintInteriorBase(ctx,W,H,lerp(p.rock2,p.ink,.15),lerp(p.rock,p.rock2,.3),ink,olw);
-  // Bar counter
-  filledRect(ctx,0,H*.45,W,H*.18,lerp(p.rock,p.rock2,.4),ink,olw);
-  filledRect(ctx,0,H*.43,W,H*.04,lerp(p.rock2,p.ground,.25),ink,olw*.8);
+  var props=sd&&sd.props||[];
+  var wall=lerp(p.sky[0],ink,.1);
+  var floor=lerp(p.rock,ink,.15);
+  paintInteriorBase(ctx,W,H,wall,floor,ink,olw);
+  // Dark wood floor boards
+  for(var fb=0;fb<12;fb++){
+    var fy=H*.7+fb*(H*.3/12);
+    filledRect(ctx,0,fy,W,H*.3/12,lerp(floor,ink,fb*.02),alpha(ink,.2),olw*.15);
+  }
+  // Back bar counter — full width
+  filledRect(ctx,0,H*.45,W,H*.05,lerp(p.rock,p.rock2,.3),ink,olw);
+  filledRect(ctx,0,H*.5,W,H*.28,lerp(p.rock,ink,.2),ink,olw);
+  // Bar top
+  filledRect(ctx,0,H*.44,W,H*.015,lerp(p.rock2,'#c8a060',.5),ink,olw*.8);
+  // Bottles on shelf — 3 rows
+  for(var row=0;row<3;row++){
+    var rowY=H*(.08+row*.13);
+    // Shelf
+    filledRect(ctx,-W*.01,rowY+H*.1,W*1.02,H*.01,lerp(p.rock2,ink,.3),ink,olw*.4);
+    // Bottles
+    for(var bot=0;bot<14;bot++){
+      var bx=W*(.015+bot*.068);
+      var bh=H*(.06+Math.sin(bot*7)*.025);
+      var bcol=[p.accent,p.flora[0],p.rock,p.accent2,alpha(p.sky[0],.8)][bot%5];
+      // Bottle body
+      filledRect(ctx,bx,rowY+H*.1-bh,W*.045,bh,bcol,ink,olw*.5);
+      // Bottle neck
+      filledRect(ctx,bx+W*.012,rowY+H*.1-bh-H*.025,W*.021,H*.025,bcol,ink,olw*.4);
+      // Label
+      filledRect(ctx,bx+W*.005,rowY+H*.1-bh*.55,W*.035,bh*.25,alpha('#fff',.3),null,0);
+    }
+  }
+  // Backlit glow behind bottles
+  var blg=ctx.createLinearGradient(0,0,0,H*.45);
+  blg.addColorStop(0,alpha(p.accent,.1));blg.addColorStop(1,alpha(p.accent,0));
+  ctx.fillStyle=blg;ctx.fillRect(0,0,W,H*.45);
   // Bar stools
-  for(var si=0;si<R.ri(3,5);si++){
-    var sx=W*(.1+si*.19);
-    circle(ctx,sx,H*.63,W*.04,lerp(p.rock,'#888',.3),ink,olw*.8);
-    ctx.beginPath();ctx.moveTo(sx,H*.63);ctx.lineTo(sx,H*.8);
-    ctx.strokeStyle=lerp(p.rock2,'#888',.4);ctx.lineWidth=W*.025;ctx.stroke();ctx.strokeStyle=ink;ctx.lineWidth=olw*.7;ctx.stroke();
+  for(var bst=0;bst<5;bst++){
+    var bsx=W*(.06+bst*.19);
+    // Seat
+    ctx.beginPath();ctx.ellipse(bsx,H*.56,W*.045,H*.025,0,0,Math.PI*2);
+    ctx.fillStyle=lerp(p.rock,'#2a1808',.4);ctx.fill();
+    ctx.strokeStyle=ink;ctx.lineWidth=olw*.7;ctx.stroke();
+    // Stool leg
+    filledRect(ctx,bsx-W*.008,H*.56,W*.016,H*.16,p.rock2,ink,olw*.5);
+    // Foot rail
+    line(ctx,bsx-W*.03,H*.72,bsx+W*.03,H*.72,ink,olw*.7);
   }
-  // Back bar shelves + bottles
-  filledRect(ctx,0,H*.1,W,H*.35,'#181414',ink,olw*.6);
-  line(ctx,0,H*.22,W,H*.22,ink,olw*.5);line(ctx,0,H*.33,W,H*.33,ink,olw*.5);
-  for(var bi=0;bi<R.ri(8,14);bi++){
-    var bx=W*(.03+bi*.07),bh=H*(.08+R.rnd(0,.04));
-    var bfill=[p.accent,p.accent2||p.accent,lerp(p.rock,p.flora[0],.5),'#1a3a08','#3a1808','#0a3050'][bi%6];
-    filledRect(ctx,bx,H*.135-bh,W*.05,bh,bfill,ink,olw*.6);
-    ctx.beginPath();ctx.rect(bx+W*.015,H*.135-bh-H*.018,W*.02,H*.018);ctx.fill();ctx.stroke();
-  }
-  // Neon sign
-  var neonColor=p.accent;
-  ctx.shadowColor=neonColor;ctx.shadowBlur=8;
-  filledRect(ctx,W*.65,H*.12,W*.3,H*.07,alpha(neonColor,.15),neonColor,1.5);
-  ctx.fillStyle=neonColor;ctx.globalAlpha=.7;ctx.fillRect(W*.7,H*.145,W*.2,H*.025);ctx.globalAlpha=1;
-  ctx.shadowBlur=0;
+  // Neon signs
+  var signs=['BAR','OPEN','DRINKS'];
+  ctx.textAlign='center';
+  [W*.15,W*.5,W*.82].forEach(function(sx,i){
+    var sc=i%2?p.accent:p.accent2;
+    ctx.font='bold '+Math.round(W*.018)+'px monospace';
+    ctx.strokeStyle=sc;ctx.lineWidth=olw*.5;ctx.shadowColor=sc;ctx.shadowBlur=10;
+    ctx.strokeText(signs[i],sx,H*.42);
+  });
+  ctx.shadowBlur=0;ctx.textAlign='left';
   // Glasses on bar
-  for(var gi=0;gi<3;gi++){
-    var gx=W*(.2+gi*.25),gy=H*.41;
-    ctx.beginPath();ctx.moveTo(gx-W*.02,gy-H*.04);ctx.lineTo(gx+W*.02,gy-H*.04);ctx.lineTo(gx+W*.015,gy);ctx.lineTo(gx-W*.015,gy);ctx.closePath();
-    ctx.fillStyle='rgba(180,210,240,.35)';ctx.fill();ctx.strokeStyle=ink;ctx.lineWidth=olw*.6;ctx.stroke();
+  for(var gl=0;gl<4;gl++){
+    var gx=W*(.05+gl*.06);
+    ctx.beginPath();ctx.moveTo(gx,H*.44);ctx.lineTo(gx-W*.015,H*.5);ctx.lineTo(gx+W*.015,H*.5);ctx.closePath();
+    ctx.strokeStyle=ink;ctx.lineWidth=olw*.5;
+    ctx.fillStyle=alpha(p.accent2,.25);ctx.fill();ctx.stroke();
+  }
+  // Mirror behind bar — reflects bottles
+  filledRect(ctx,W*.02,H*.04,W*.96,H*.38,alpha(lerp(p.sky[0],ink,.05),.6),ink,olw*.8);
+  var mg=ctx.createLinearGradient(0,H*.04,W,H*.04);
+  mg.addColorStop(0,alpha('#fff',.07));mg.addColorStop(.5,alpha('#fff',.03));mg.addColorStop(1,alpha('#fff',.07));
+  ctx.fillStyle=mg;ctx.fillRect(W*.02,H*.04,W*.96,H*.38);
+  // Moody overhead spot lights
+  for(var sl=0;sl<3;sl++){
+    var slx=W*(.15+sl*.35);
+    var slg=ctx.createRadialGradient(slx,H*.02,1,slx,H*.15,W*.18);
+    slg.addColorStop(0,alpha(p.light||'#e0c070',.14));
+    slg.addColorStop(1,alpha(p.light||'#e0c070',0));
+    ctx.fillStyle=slg;ctx.fillRect(slx-W*.18,0,W*.36,H*.5);
+  }
+  // Cups and drinks on counter
+  if(props.indexOf('cup')>-1||true){
+    drawCup(ctx,W*.38,H*.42,W*.018,ink,olw*.8,'#3a1808');
+    drawCup(ctx,W*.62,H*.42,W*.018,ink,olw*.8,p.accent);
   }
 }
 
-// ── RESTAURANT ──
 function paintRestaurant(ctx,W,H,p,ink,olw,R,sd){
   paintInteriorBase(ctx,W,H,lerp(p.sky[0],p.ground,.04),lerp(p.ground,p.rock,.1),ink,olw);
   // Candle-lit ambiance
@@ -2282,30 +2385,72 @@ function paintRestaurant(ctx,W,H,p,ink,olw,R,sd){
 // ── OFFICE ──
 function paintOffice(ctx,W,H,p,ink,olw,R,sd){
   var props=sd&&sd.props||[];
-  paintInteriorBase(ctx,W,H,lerp(p.sky[0],p.ground,.04),lerp(p.ground,p.rock,.15),ink,olw);
-  // Fluorescent lighting
+  var wall=lerp(p.sky[0],p.ground,.04);
+  var floor=lerp(p.ground,p.rock,.15);
+  paintInteriorBase(ctx,W,H,wall,floor,ink,olw);
+  // Baseboard
+  filledRect(ctx,0,H*.78,W,H*.02,lerp(floor,ink,.12),ink,olw*.3);
+  // Ceiling fluorescent strips
   for(var li=0;li<3;li++){
-    filledRect(ctx,W*(.1+li*.32),H*.01,W*.22,H*.04,'#fffef0',ink,olw*.7);
-    var lg=ctx.createRadialGradient(W*(.21+li*.32),H*.03,1,W*(.21+li*.32),H*.03,W*.2);
-    lg.addColorStop(0,'rgba(255,252,220,.14)');lg.addColorStop(1,'rgba(255,252,220,0)');
-    ctx.fillStyle=lg;ctx.fillRect(W*(li*.32),0,W*.42,H*.45);
+    var lx=W*(.08+li*.32);
+    filledRect(ctx,lx,H*.01,W*.2,H*.03,'#fffef0',ink,olw*.5);
+    var lg=ctx.createRadialGradient(lx+W*.1,H*.02,1,lx+W*.1,H*.04,W*.22);
+    lg.addColorStop(0,'rgba(255,252,220,.13)');lg.addColorStop(1,'rgba(255,252,220,0)');
+    ctx.fillStyle=lg;ctx.fillRect(lx-W*.06,0,W*.34,H*.5);
   }
-  // Large window
-  paintWindow(ctx,W,H,W*.6,H*.08,W*.34,H*.4,lerp(p.sky[0],p.sky[1],.3),ink,olw,false);
-  // Desk
-  paintTable(ctx,W*.04,H*.55,W*.5,H*.04,lerp(p.rock,p.ground,.35),ink,olw);
-  // Monitor
-  filledRect(ctx,W*.12,H*.32,W*.2,H*.18,'#181818',ink,olw);
-  filledRect(ctx,W*.125,H*.325,W*.19,H*.155,'#1a2040',ink,olw*.5);
-  ctx.strokeStyle='rgba(100,140,255,.4)';ctx.lineWidth=1;
-  for(var ml=0;ml<3;ml++)line(ctx,W*.13,H*(.35+ml*.04),W*.3,H*(.35+ml*.04),'rgba(100,140,255,.4)',1);
+  // Large window — city view
+  paintWindow(ctx,W,H,W*.58,H*.06,W*.36,H*.44,p.sky[0],ink,olw,false);
+  // Window frame grid
+  line(ctx,W*.76,H*.06,W*.76,H*.5,ink,olw*.7);
+  line(ctx,W*.58,H*.28,W*.94,H*.28,ink,olw*.7);
+  // City silhouette in window
+  var bldColors=[lerp(p.sky[1],ink,.3),lerp(p.sky[1],ink,.5),lerp(p.sky[1],ink,.4)];
+  [[.6,.42,H*.36],[.67,.3,H*.44],[.74,.38,H*.32],[.8,.28,H*.42],[.86,.35,H*.36]].forEach(function(b,i){
+    filledRect(ctx,W*b[0],H*.5-b[2],W*b[1],b[2],bldColors[i%3],null,0);
+    // Building windows
+    for(var wr=0;wr<3;wr++)for(var wc=0;wc<2;wc++){
+      var wy=H*.5-b[2]+H*(.04+wr*.08);
+      if(wy<H*.48)filledRect(ctx,W*b[0]+W*(wc*.08+.02),wy,W*.04,H*.04,Math.random()>.5?alpha(p.accent2,.7):'#181820',null,0);
+    }
+  });
+  // Desk — large executive
+  var dy=H*.57;
+  filledRect(ctx,W*.04,dy,W*.56,H*.05,lerp(p.rock,p.ground,.4),ink,olw);
+  // Desk front panel
+  filledRect(ctx,W*.04,dy+H*.05,W*.56,H*.14,lerp(p.rock,p.ground,.35),ink,olw*.8);
+  // Desk legs
+  filledRect(ctx,W*.05,dy+H*.05,W*.04,H*.14,lerp(p.rock,p.ground,.25),ink,olw*.6);
+  filledRect(ctx,W*.55,dy+H*.05,W*.04,H*.14,lerp(p.rock,p.ground,.25),ink,olw*.6);
+  // Monitor — large widescreen
+  filledRect(ctx,W*.14,H*.32,W*.26,H*.21,'#101018',ink,olw);
+  filledRect(ctx,W*.145,H*.325,W*.25,H*.195,'#0f1428',ink,olw*.3);
+  ctx.strokeStyle='rgba(80,120,255,.35)';ctx.lineWidth=1;
+  for(var ml=0;ml<4;ml++)line(ctx,W*.155,H*(.35+ml*.038),W*.38,H*(.35+ml*.038),'rgba(80,120,255,.3)',1);
+  // Monitor glow
+  var mg=ctx.createRadialGradient(W*.27,H*.42,1,W*.27,H*.42,W*.18);
+  mg.addColorStop(0,'rgba(40,80,200,.08)');mg.addColorStop(1,'rgba(40,80,200,0)');
+  ctx.fillStyle=mg;ctx.fillRect(W*.08,H*.25,W*.38,H*.3);
   // Monitor stand
-  filledRect(ctx,W*.19,H*.5,W*.06,H*.05,p.rock2,ink,olw*.7);
-  // Chair
-  filledRect(ctx,W*.25,H*.52,W*.14,H*.1,lerp(p.rock,'#3a3a3a',.3),ink,olw*.8);
-  // Papers on desk
-  if(props.indexOf('document')>-1||props.indexOf('table')>-1){
-    drawDoc(ctx,W*.52,H*.5,W*.18,H*.1,ink,olw);
+  filledRect(ctx,W*.24,H*.53,W*.06,H*.04,p.rock2,ink,olw*.7);
+  filledRect(ctx,W*.2,H*.57,W*.14,H*.015,p.rock2,ink,olw*.6);
+  // Office chair
+  filledRect(ctx,W*.33,H*.53,W*.16,H*.11,lerp(p.rock,'#2a2a2a',.4),ink,olw*.8);
+  filledRect(ctx,W*.33,H*.44,W*.16,H*.11,lerp(p.rock,'#2a2a2a',.3),ink,olw*.7);
+  filledRect(ctx,W*.405,H*.64,W*.02,H*.06,p.rock2,ink,olw*.5);
+  // Keyboard
+  filledRect(ctx,W*.2,H*.56,W*.13,H*.025,lerp(p.rock2,ink,.2),ink,olw*.5);
+  // Documents / phone
+  if(props.indexOf('document')>-1||true){drawDoc(ctx,W*.44,H*.54,W*.14,H*.08,ink,olw*.8);}
+  if(props.indexOf('cup')>-1||props.indexOf('coffee')>-1){drawCup(ctx,W*.53,H*.53,W*.015,ink,olw*.7,p.accent);}
+  if(props.indexOf('phone')>-1){drawPhone(ctx,W*.07,H*.55,W*.06,H*.09,ink,olw*.7,true);}
+  // Bookcase on left wall
+  filledRect(ctx,W*.83,H*.05,W*.15,H*.73,lerp(p.rock,p.ground,.3),ink,olw*.9);
+  for(var bs=0;bs<4;bs++){
+    line(ctx,W*.83,H*(.2+bs*.15),W*.98,H*(.2+bs*.15),ink,olw*.5);
+    for(var bk=0;bk<4;bk++){
+      var bx=W*(.845+bk*.033),bh=H*(.08+Math.random()*.04);
+      filledRect(ctx,bx,H*(.22+bs*.15)-bh,W*.026,bh,[p.accent,p.accent2,p.flora[0],p.rock][bk%4],ink,olw*.4);
+    }
   }
 }
 
@@ -3061,7 +3206,9 @@ async function renderScene(paragraph,genre,tone,insertAfterEl){
           setTimeout(function(){loadGeminiImage((attempt||1)+1);},1500);
         } else {
           clearTimeout(loadTimeout);
-          loadingDot.style.display='none';
+          loadingDot.innerHTML='<span style="width:5px;height:5px;border-radius:50%;background:rgba(160,168,184,.3);display:inline-block;margin-right:4px;"></span><span style="color:rgba(160,168,184,.35);">Canvas Art</span>';
+          loadingDot.style.animation='none';
+          setTimeout(function(){loadingDot.style.display='none';},3000);
           console.log('[NEXUS] Gemini image unavailable — canvas illustration shown');
         }
       });
